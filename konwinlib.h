@@ -223,6 +223,7 @@ void blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int hei
 	if (!window || !kon_ctx || !pixels) return;
 
 	XImage *ximg = XCreateImage(kon_ctx->display, window->visual, window->depth, ZPixmap, 0, (char *)pixels, width, height, 32, 0);
+	if (!ximg) return;
 
 	XPutImage(kon_ctx->display, window->window, window->gc, ximg, 0, 0, 0, 0, width, height);
 
