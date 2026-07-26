@@ -8,6 +8,9 @@
 #define KONTIME_IMPLEMENTATION
 #include "kontime.h"
 
+#define KONSOFREN_IMPLEMENTATION
+#include "konsofren.h"
+
 #define EXIT_SUCCESS 0
 
 #define WINDOW_TITLE "konwinlib - test"
@@ -29,14 +32,47 @@ int main(void) {
 		return 1;
 	}
 
+	kon_framebuffer_t *fb = kon_createFramebuffer(WINDOW_WIDTH, WINDOW_HEIGHT);
+	if (!fb) {
+		fprintf(stderr, "kon_createFramebuffer failed!\n");
+		kon_destroyWindow(win);
+		kon_deinit();
+	}
+
+	uint8_t *export_buf = malloc((size_t)fb->width * fb->height * 4);
+	if (!export_buf) {
+		fprintf(stderr, "failed at creating export buffer... somehow...\n");
+		kon_freeFramebuffer(fb);
+		kon_destroyWindow(win);
+		kon_deinit();
+	}
+
 	kon_event_t event;
 	while (!kon_windowShouldClose(win)) {
-		while (pollEvent(win, &event)) {}
+		while (pollEvent(win, &event)) {
+			if (event.type == KON_EVENT_RESIZE) {
+				kon_resizeFramebuffer(fb, event.width, event.height);
+
+				uint8_t *tmp = realloc(export_buf, (size_t)fb->width * fb->height * 4);
+				if (tmp) export_buf = tmp;
+			}
+		}
+
+		kon_clearFramebuffer(fb, KON_BACKGROUND_COLOR);
+
+		kon_fillRectangle(fb, 50, 50, 50, 50, 0xFF0000FF);
+
+		kon_exportPixels(fb, konFormatBGRA8, export_buf);
+		blitPixels(win, (uint32_t *)export_buf, fb->width, fb->height);
+
 		kon_sleep(1.0 / FPS);
 	}
 
-	kon_destroyWindow(win);
+	/*** cleanup ***/
 
+	free(export_buf);
+	kon_freeFramebuffer(fb);
+	kon_destroyWindow(win);
 	kon_deinit();
 
 	return EXIT_SUCCESS;
