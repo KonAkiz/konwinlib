@@ -58,7 +58,7 @@ int main(void) {
 			}
 		}
 
-		kon_clearFramebuffer(fb, KON_BACKGROUND_COLOR);
+		kon_clearFramebuffer(fb, 0x00000000);
 
 		kon_fillRectangle(fb, 50, 50, 50, 50, 0xFF0000FF);
 
