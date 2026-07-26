@@ -1,0 +1,6 @@
+[Bb]uild
+[Bb]in
+[Oo]ut
+
+*.o
+program
