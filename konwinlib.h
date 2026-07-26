@@ -66,7 +66,6 @@ void kon_deinit(void) {
 }
 
 struct kon_window {
-	Display *display;
 	Window window;
 	GC gc;
 	Visual *visual;
