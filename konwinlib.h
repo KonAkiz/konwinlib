@@ -219,9 +219,18 @@ bool kon_windowShouldClose(kon_window_t *window) {
 
 /* TODO: implement the rest of these */
 
-/* void blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height) { */
+void blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height) {
+	if (!window || !kon_ctx || !pixels) return;
 
-/* } */
+	XImage *ximg = XCreateImage(kon_ctx->display, window->visual, window->depth, ZPixmap, 0, (char *)pixels, width, height, 32, 0);
+
+	XPutImage(kon_ctx->display, window->window, window->gc, ximg, 0, 0, 0, 0, width, height);
+
+	ximg->data = NULL;
+	XDestroyImage(ximg);
+
+	XFlush(kon_ctx->display);
+}
 
 #endif /* end of linux / unix implementation */
 
