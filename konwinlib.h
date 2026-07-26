@@ -278,7 +278,11 @@ void blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int hei
 	XFlush(kon_ctx->display);
 }
 
-#endif /* end of linux / unix implementation */
+#elif defined(_WIN32)
+	#error "konwinlib.h: Windows backend not implemented yet"
+#else
+	#error "konwinlib.h: unsupported platform"
+#endif /* end of platform switch */
 
 #endif /* end of KONWINLIB_IMPLEMENTATION */
 
