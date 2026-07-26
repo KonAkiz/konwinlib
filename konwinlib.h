@@ -58,12 +58,17 @@ bool kon_init(void) {
 	kon_context_t *ctx = malloc(sizeof(kon_context_t));
 	if (!ctx) return false;
 	ctx->display = XOpenDisplay(NULL);
+	if (!ctx->display) return false;
 	kon_ctx = ctx;
 	return true;
 }
 
 void kon_deinit(void) {
+	if (!ctx) return;
+
+	XCloseDisplay(kon_ctx->display);
 	free(kon_ctx);
+	kon_ctx=NULL;
 }
 
 struct kon_window {
