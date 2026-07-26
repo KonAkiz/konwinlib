@@ -6,11 +6,11 @@
 #define EXIT_SUCCESS 0
 
 int main(void) {
-	kon_context_t *ctx = kon_init();
+	kon_init();
 
 	puts("Hello, World!");
 
-	kon_deinit(ctx);
+	kon_deinit();
 
 	return EXIT_SUCCESS;
 }
