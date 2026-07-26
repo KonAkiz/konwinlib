@@ -14,15 +14,25 @@
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
 
-int main(void) {
-	kon_init();
+#define FPS 60
 
-	kon_window_t *win = kon_createWindow(WINDOW_TITLE, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+int main(void) {
+	if (!kon_init()) {
+		fprintf(stderr, "kon_init failed!\n");
+		return 1;
+	}
+
+	kon_window_t *win = kon_createWindow(WINDOW_TITLE, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, KON_WINDOW_TRANSPARENT);
+	if (!win) {
+		fprintf(stderr, "kon_createWindow failed!\n");
+		kon_deinit();
+		return 1;
+	}
 
 	kon_event_t event;
 	while (!kon_windowShouldClose(win)) {
 		while (pollEvent(win, &event)) {}
-		kon_sleep(1.0 / 60.0);
+		kon_sleep(1.0 / FPS);
 	}
 
 	kon_destroyWindow(win);
