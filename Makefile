@@ -1,6 +1,6 @@
 CC=cc
 
-SRC=main.c
+SRC=examples/main.c
 
 OBJ=$(SRC:.c=.o)
 
