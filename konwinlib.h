@@ -127,6 +127,9 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 	}
 
 	if (!window->window) {
+		if (window->owns_colormap) {
+			XFreeColormap(kon_ctx->display, window->colormap);
+		}
 		free(window);
 		return NULL;
 	}
