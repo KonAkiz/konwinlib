@@ -79,6 +79,7 @@ struct kon_window {
 	int depth;
 	Colormap colormap;
 	bool owns_colormap;
+	Atom wm_delete;
 };
 
 kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags) {
@@ -154,8 +155,8 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 						PropModeReplace, (unsigned char *)&wm_above, 1);
 	}
 
-	Atom wm_delete = XInternAtom(kon_ctx->display, "WM_DELETE_WINDOW", False);
-	XSetWMProtocols(kon_ctx->display, window->window, &wm_delete, 1);
+	window->wm_delete = XInternAtom(kon_ctx->display, "WM_DELETE_WINDOW", False);
+	XSetWMProtocols(kon_ctx->display, window->window, &window->wm_delete, 1);
 
 	window->gc = XCreateGC(kon_ctx->display, window->window, 0, NULL);
 
@@ -178,11 +179,11 @@ void kon_destroyWindow(kon_window_t *window) {
 	free(window);
 }
 
-/* TODO: implement the rest of these */
-
 /* int pollEvent(kon_window_t *window, kon_event_t *event) { */
-
+	
 /* } */
+
+/* TODO: implement the rest of these */
 
 /* void blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height) { */
 
