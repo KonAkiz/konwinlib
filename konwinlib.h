@@ -179,9 +179,25 @@ void kon_destroyWindow(kon_window_t *window) {
 	free(window);
 }
 
-/* int pollEvent(kon_window_t *window, kon_event_t *event) { */
-	
-/* } */
+int pollEvent(kon_window_t *window, kon_event_t *event) {
+	if (!window || !kon_ctx || !event) return 0;
+
+	event->type = KON_EVENT_NONE;
+
+	if (!XPending(kon_ctx->display)) return 0;
+
+	XEvent xev;
+	XNextEvent(kon_ctx->display, &xev);
+
+	if (xev.type == ConfigureNotify) {
+		event->type = KON_EVENT_RESIZE;
+		event->width = xev.xconfigure.width;
+		event->height = xev.xconfigure.height;
+		return 1;
+	}
+
+	return 1;
+}
 
 /* TODO: implement the rest of these */
 
