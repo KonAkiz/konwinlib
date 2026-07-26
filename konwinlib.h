@@ -189,6 +189,12 @@ int pollEvent(kon_window_t *window, kon_event_t *event) {
 	XEvent xev;
 	XNextEvent(kon_ctx->display, &xev);
 
+	if (xev.type == ClientMessage) {
+		if ((Atom)xev.xclient.data.l[0] == window->wm_delete) {
+			event->type = KON_EVENT_CLOSE;
+		}
+	}
+
 	if (xev.type == ConfigureNotify) {
 		event->type = KON_EVENT_RESIZE;
 		event->width = xev.xconfigure.width;
