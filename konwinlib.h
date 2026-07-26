@@ -214,7 +214,7 @@ int pollEvent(kon_window_t *window, kon_event_t *event) {
 
 bool kon_windowShouldClose(kon_window_t *window) {
 	if (!window || !kon_ctx) return true;
-	return window->kon_windowShouldClose(window);
+	return window->shouldClose;
 }
 
 /* TODO: implement the rest of these */

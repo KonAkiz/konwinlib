@@ -20,12 +20,8 @@ int main(void) {
 	kon_window_t *win = kon_createWindow(WINDOW_TITLE, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
 
 	kon_event_t event;
-	bool running = true;
-
-	while (running) {
-		while (pollEvent(win, &event)) {
-			if (event.type == KON_EVENT_CLOSE) running = false;
-		}
+	while (!kon_windowShouldClose(win)) {
+		while (pollEvent(win, &event)) {}
 		kon_sleep(1.0 / 60.0);
 	}
 
