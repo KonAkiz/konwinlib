@@ -112,7 +112,4 @@ My [main.c file](examples/main.c) contains an example implementation that's hook
 
 If you wish to see an example setup, you can check my [examples dir/folder](examples) or my [main.c file](examples/main.c) that I use for prototyping.
 
-## Future Goals:
-- add windows support
-
 ## License - [MIT License](LICENSE)
