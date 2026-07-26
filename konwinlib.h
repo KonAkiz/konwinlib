@@ -33,7 +33,7 @@ typedef struct kon_event {
 } kon_event_t;
 
 kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags);
-void kon_destoryWindow(kon_window_t *window);
+void kon_destroyWindow(kon_window_t *window);
 int pollEvent(kon_window_t *window, kon_event_t *event);
 void blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height);
 
@@ -46,6 +46,7 @@ static kon_context_t *kon_ctx;
 #if defined(__linux__) || defined(__unix__)
 
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <stdlib.h>
 #include <string.h>
@@ -77,6 +78,7 @@ struct kon_window {
 	Visual *visual;
 	int depth;
 	Colormap colormap;
+	bool owns_colormap;
 };
 
 kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags) {
@@ -90,14 +92,88 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 
 	int screen = DefaultScreen(kon_ctx->display);
 
-	/* XCreateSimpleWindow(kon_ctx,  */
+	if (flags & KON_WINDOW_TRANSPARENT) {
+		XVisualInfo vinfo;
+		if (!XMatchVisualInfo(kon_ctx->display, screen, 32, TrueColor, &vinfo)) {
+			free(window);
+			return NULL;
+		}
+
+		window->visual   = vinfo.visual;
+		window->depth    = vinfo.depth;
+		window->colormap = XCreateColormap(kon_ctx->display, RootWindow(kon_ctx->display, screen), window->visual, AllocNone);
+
+		XSetWindowAttributes attrs;
+		attrs.colormap = window->colormap;
+		attrs.background_pixel = 0;
+		attrs.border_pixel = 0;
+
+		window->window = XCreateWindow(
+									   kon_ctx->display, RootWindow(kon_ctx->display, screen),
+									   x, y, width, height, 0, window->depth, InputOutput,
+									   window->visual, CWColormap | CWBackPixel | CWBorderPixel, &attrs);
+
+		window->owns_colormap = true;
+	} else {
+		window->visual   = DefaultVisual(kon_ctx->display, screen);
+		window->depth    = DefaultDepth(kon_ctx->display, screen);
+		window->colormap = DefaultColormap(kon_ctx->display, screen);
+
+		window->window = XCreateSimpleWindow(
+											 kon_ctx->display, RootWindow(kon_ctx->display, screen),
+											 x, y, width, height, 0, 0, 0);
+
+		window->owns_colormap = false;
+	}
+
+	if (!window->window) {
+		free(window);
+		return NULL;
+	}
+
+	XStoreName(kon_ctx->display, window->window, title);
+	XSelectInput(kon_ctx->display, window->window, ExposureMask | StructureNotifyMask);
+
+	if (flags & KON_WINDOW_NO_DECOR) {
+		Atom motif_hints = XInternAtom(kon_ctx->display, "_MOTIF_WM_HINTS", False);
+		struct { unsigned long flags, functions, decorations; long input_mode; unsigned long status; } hints;
+		memset(&hints, 0, sizeof(hints));
+		hints.flags = 2;
+		hints.decorations = 0;
+		XChangeProperty(kon_ctx->display, window->window, motif_hints,
+						motif_hints, 32, PropModeReplace, (unsigned char *)&hints, 5);
+	}
+
+	if (flags & KON_WINDOW_ALWAYS_ONTOP) {
+		Atom wm_state = XInternAtom(kon_ctx->display, "_NET_WM_STATE", False);
+		Atom wm_above = XInternAtom(kon_ctx->display, "_NET_WM_STATE_ABOVE", False);
+		XChangeProperty(kon_ctx->display, window->window, wm_state, XA_ATOM, 32,
+						PropModeReplace, (unsigned char *)&wm_above, 1);
+	}
+
+	Atom wm_delete = XInternAtom(kon_ctx->display, "WM_DELETE_WINDOW", False);
+	XSetWMProtocols(kon_ctx->display, window->window, &wm_delete, 1);
+
+	window->gc = XCreateGC(kon_ctx->display, window->window, 0, NULL);
+
+	XMapWindow(kon_ctx->display, window->window);
+	XFlush(kon_ctx->display);
 
 	return window;
 }
 
-/* void kon_destoryWindow(kon_window_t *window) { */
+void kon_destroyWindow(kon_window_t *window) {
+	if (!window) return;
+	if (!kon_ctx) { free(window); return; }
 
-/* } */
+	if (window->gc) XFreeGC(kon_ctx->display, window->gc);
+	if (window->window) XDestroyWindow(kon_ctx->display, window->window);
+	if (window->owns_colormap && window->colormap) XFreeColormap(kon_ctx->display, window->colormap);
+
+	XFlush(kon_ctx->display);
+
+	free(window);
+}
 
 /* TODO: implement the rest of these */
 

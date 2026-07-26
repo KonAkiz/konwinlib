@@ -10,7 +10,7 @@ CFLAGS=-Wall -Wextra -Werror -pedantic -std=c99
 
 INC=-I.
 
-LIBS=-L. -lX11
+LIBS=-L. -lX11 -lXrandr
 
 .PHONY: test
 
