@@ -5,6 +5,11 @@
 
 /*** definitions ***/
 
+typedef struct kon_context kon_context_t;
+
+kon_context_t *kon_init(void);
+void kon_deinit(kon_context_t *ctx);
+
 typedef struct kon_window kon_window_t;
 
 typedef enum kon_windowFlags {
@@ -29,5 +34,44 @@ kon_window_t *kon_createWindow(const char *title, int width, int height, kon_win
 void kon_destoryWindow(kon_window_t *window);
 int pollEvent(kon_window_t *window, kon_event_t *event);
 void blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height);
+
+/*** implementation ***/
+
+#ifdef KONWINLIB_IMPLEMENTATION
+
+#if defined(__linux__) || defined(__unix__)
+
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct kon_context {
+	Display *display;
+};
+
+kon_context_t *kon_init(void) {
+	kon_context_t *ctx = malloc(sizeof(kon_context_t));
+	if (!ctx) return NULL;
+	ctx->display = XOpenDisplay(NULL);
+	return ctx;
+}
+
+void kon_deinit(kon_context_t *ctx) {
+	free(ctx);
+}
+
+struct kon_window {
+	Display *display;
+	Window window;
+	GC gc;
+	Visual *visual;
+	int depth;
+	Colormap colormap;
+};
+
+#endif /* end of linux / unix implementation */
+
+#endif /* end of KONWINLIB_IMPLEMENTATION */
 
 #endif
