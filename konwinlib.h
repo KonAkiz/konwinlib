@@ -34,6 +34,9 @@ typedef struct kon_event {
 
 kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags);
 void kon_destroyWindow(kon_window_t *window);
+
+bool kon_windowShouldClose(kon_window_t *window);
+
 int pollEvent(kon_window_t *window, kon_event_t *event);
 void blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height);
 
@@ -80,6 +83,7 @@ struct kon_window {
 	Colormap colormap;
 	bool owns_colormap;
 	Atom wm_delete;
+	bool shouldClose;
 };
 
 kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags) {
@@ -163,6 +167,8 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 	XMapWindow(kon_ctx->display, window->window);
 	XFlush(kon_ctx->display);
 
+	window->shouldClose = false;
+
 	return window;
 }
 
@@ -192,6 +198,7 @@ int pollEvent(kon_window_t *window, kon_event_t *event) {
 	if (xev.type == ClientMessage) {
 		if ((Atom)xev.xclient.data.l[0] == window->wm_delete) {
 			event->type = KON_EVENT_CLOSE;
+			window->shouldClose = true;
 		}
 	}
 
@@ -203,6 +210,11 @@ int pollEvent(kon_window_t *window, kon_event_t *event) {
 	}
 
 	return 1;
+}
+
+bool kon_windowShouldClose(kon_window_t *window) {
+	if (!window || !kon_ctx) return true;
+	return window->kon_windowShouldClose(window);
 }
 
 /* TODO: implement the rest of these */
