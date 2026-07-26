@@ -64,7 +64,7 @@ bool kon_init(void) {
 }
 
 void kon_deinit(void) {
-	if (!ctx) return;
+	if (!kon_ctx) return;
 
 	XCloseDisplay(kon_ctx->display);
 	free(kon_ctx);
