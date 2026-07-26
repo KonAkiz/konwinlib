@@ -18,7 +18,8 @@ typedef enum kon_windowFlags {
 	KON_WINDOW_NONE = 0,
 	KON_WINDOW_TRANSPARENT = 1 << 0,
 	KON_WINDOW_NO_DECOR = 1 << 1,
-	KON_WINDOW_ALWAYS_ONTOP = 1 << 2
+	KON_WINDOW_ALWAYS_ONTOP = 1 << 2,
+	KON_WINDOW_CENTER = 1 << 3
 } kon_windowFlags_t;
 
 typedef enum kon_eventType {
@@ -51,6 +52,7 @@ static kon_context_t *kon_ctx;
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
+#include <X11/extensions/Xrandr.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -96,6 +98,49 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 	if (!window) return NULL;
 
 	int screen = DefaultScreen(kon_ctx->display);
+
+	if (flags & KON_WINDOW_CENTER) {
+		Window root = RootWindow(kon_ctx->display, screen);
+
+		int mon_x = 0, mon_y = 0;
+		int mon_width  = DisplayWidth(kon_ctx->display, screen);
+		int mon_height = DisplayHeight(kon_ctx->display, screen);
+
+		Window root_ret, child_ret;
+		int root_x, root_y, win_x, win_y;
+		unsigned int mask;
+		XQueryPointer(kon_ctx->display, root, &root_ret, &child_ret, &root_x, &root_y, &win_x, &win_y, &mask);
+
+		XRRScreenResources *res = XRRGetScreenResourcesCurrent(kon_ctx->display, root);
+		if (res) {
+			for (int i = 0; i < res->noutput; i++) {
+				XRROutputInfo *out_info = XRRGetOutputInfo(kon_ctx->display, res, res->outputs[i]);
+
+				if (out_info && out_info->crtc) {
+					XRRCrtcInfo *crtc = XRRGetCrtcInfo(kon_ctx->display, res, out_info->crtc);
+					if (crtc) {
+
+						if (root_x >= crtc->x && root_x < crtc->x + (int)crtc->width && 
+							root_y >= crtc->y && root_y < crtc->y + (int)crtc->height) {
+							mon_x = crtc->x;
+							mon_y = crtc->y;
+							mon_width = crtc->width;
+							mon_height = crtc->height;
+							XRRFreeCrtcInfo(crtc);
+							if (out_info) XRRFreeOutputInfo(out_info);
+							break;
+						}
+						XRRFreeCrtcInfo(crtc);
+					}
+				}
+				if (out_info) XRRFreeOutputInfo(out_info);
+			}
+			XRRFreeScreenResources(res);
+		}
+
+		x = mon_x + (mon_width  - width ) / 2;
+		y = mon_y + (mon_height - height) / 2;
+	}
 
 	if (flags & KON_WINDOW_TRANSPARENT) {
 		XVisualInfo vinfo;
