@@ -39,9 +39,9 @@ void blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int hei
 
 /*** implementation ***/
 
-static kon_context_t *kon_ctx;
-
 #ifdef KONWINLIB_IMPLEMENTATION
+
+static kon_context_t *kon_ctx;
 
 #if defined(__linux__) || defined(__unix__)
 
