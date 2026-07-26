@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 /*** definitions ***/
 
@@ -31,7 +32,7 @@ typedef struct kon_event {
 	int width, height; /* will be used to store data for resize events */
 } kon_event_t;
 
-kon_window_t *kon_createWindow(const char *title, int width, int height, kon_windowFlags_t flags);
+kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags);
 void kon_destoryWindow(kon_window_t *window);
 int pollEvent(kon_window_t *window, kon_event_t *event);
 void blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height);
@@ -73,14 +74,27 @@ struct kon_window {
 	Colormap colormap;
 };
 
-/* kon_window_t *kon_createWindow(const char *title, int width, int height, kon_windowFlags_t flags) { */
-	
-/* } */
+kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags) {
+	if (!kon_ctx) {
+		fprintf(stderr, "kon_createWindow: There appears to be no kon_ctx. \nPlease, do kon_init(); before doing anything with konwinlib, thank you.\n");
+		return NULL;
+	}
 
-/* TODO: implement the rest of these */
+	kon_window_t *window = malloc(sizeof(kon_window_t));
+	if (!window) return NULL;
+
+	int screen = DefaultScreen(kon_ctx->display);
+
+	/* XCreateSimpleWindow(kon_ctx,  */
+
+	return window;
+}
+
 /* void kon_destoryWindow(kon_window_t *window) { */
 
 /* } */
+
+/* TODO: implement the rest of these */
 
 /* int pollEvent(kon_window_t *window, kon_event_t *event) { */
 
