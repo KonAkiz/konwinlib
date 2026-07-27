@@ -393,7 +393,9 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 	window->shouldClose = false;
 	window->hasResizeEvent = false;
 
-	window->hwnd = CreateWindowEx(0, "KonWinLibClass", title, WS_OVERLAPPEDWINDOW, x, y, width, height, NULL, NULL, kon_ctx->hInstance, window);
+	DWORD style = (flags & KON_WINDOW_NO_DECOR) ? WS_POPUP : WS_OVERLAPPEDWINDOW;
+
+	window->hwnd = CreateWindowEx(0, "KonWinLibClass", title, style_OVERLAPPEDWINDOW, x, y, width, height, NULL, NULL, kon_ctx->hInstance, window);
 
 	if (!window->hwnd) {
 		free(window);
