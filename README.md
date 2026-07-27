@@ -64,6 +64,8 @@ int main(void) {
 }
 ```
 
+This is close to what I did again during testing for the windows implementation of this library. You can check it out [here](examples/minimal.c).
+
 one with error handling is this one:
 ```c
 #include <stdio.h>
