@@ -469,6 +469,18 @@ bool kon_windowShouldClose(kon_window_t *window) {
 	return window->shouldClose;
 }
 
+void kon_setWindowPos(kon_window_t *window, int x, int y) {
+	if (!window || !kon_ctx) return;
+
+	SetWindowPos(window->hwnd, NULL, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+}
+
+void kon_setWindowSize(kon_window_t *window, int width, int height) {
+	if (!window || !kon_ctx) return;
+
+	SetWindowPos(window->hwnd, NULL, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
+}
+
 int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 	if (!window || !event) return 0;
 
