@@ -68,6 +68,8 @@ void kon_destroyWindow(kon_window_t *window);
 
 bool kon_windowShouldClose(kon_window_t *window);
 
+void kon_setExitKey(kon_window_t *window, int key);
+
 void kon_setWindowPos(kon_window_t *window, int x, int y);
 void kon_setWindowSize(kon_window_t *window, int width, int height);
 
