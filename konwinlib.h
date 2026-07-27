@@ -52,12 +52,15 @@ typedef enum kon_windowFlags {
 typedef enum kon_eventType {
 	KON_EVENT_NONE = 0,
 	KON_EVENT_CLOSE,
-	KON_EVENT_RESIZE
+	KON_EVENT_RESIZE,
+	KON_EVENT_KEY_DOWN,
+	KON_EVENT_KEY_UP
 } kon_eventType_t;
 
 typedef struct kon_event {
 	kon_eventType_t type;
 	int width, height; /* will be used to store data for resize events */
+	int key;
 } kon_event_t;
 
 kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags);
@@ -322,6 +325,18 @@ int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 		event->type = KON_EVENT_RESIZE;
 		event->width = xev.xconfigure.width;
 		event->height = xev.xconfigure.height;
+		return 1;
+	}
+
+	if (xev.type == KeyPress) {
+		event->type = KON_EVENT_KEY_DOWN;
+		event->key = (int)XLookupKeysym(&xev.xkey, 0);
+		return 1;
+	}
+
+	if (xev.type == KeyRelease) {
+		event->type = KON_EVENT_KEY_UP;
+		event->key = (int)XLookupKeysym(&xev.xkey, 0);
 		return 1;
 	}
 
