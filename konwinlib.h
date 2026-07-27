@@ -384,6 +384,26 @@ void kon_deinit(void) {
 }
 
 
+kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags) {
+	if (!kon_ctx) return NULL;
+
+	kon_window_t *window = malloc(sizeof(kon_window_t));
+	if (!window) return NULL;
+
+	window->shouldClose = false;
+	window->hasResizeEvent = false;
+
+	window->hwnd = CreateWindowEx(0, "KonWinLibClass", title, WS_OVERLAPPEDWINDOW, x, y, width, height, NULL, NULL, kon_ctx->hInstance, window);
+
+	if (!window->hwnd) {
+		free(window);
+		return NULL;
+	}
+
+	ShowWindow(window->hwnd, SW_SHOW);
+
+	return window;
+}
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
