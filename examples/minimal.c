@@ -21,7 +21,7 @@ int main(void) {
 		return EXIT_FAILURE;
 	}
 
-	kon_window_t *window = kon_createWindow(WINDOW_TITLE, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+	kon_window_t *window = kon_createWindow(WINDOW_TITLE, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, KON_WINDOW_RESIZABLE | KON_WINDOW_CENTER);
 	if (!window) {
 		fprintf(stderr, "kon_createWindow: error creating window...\n");
 		kon_deinit();
