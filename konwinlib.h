@@ -394,7 +394,7 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 
 	window->shouldClose = false;
 	window->hasResizeEvent = false;
-	window->isTransparent = false;
+	window->isTransparent = (flags & KON_WINDOW_TRANSPARENT);
 
 	DWORD style;
 	if (flags & KON_WINDOW_NO_DECOR) {
