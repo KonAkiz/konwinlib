@@ -15,5 +15,9 @@
 
 int main(void) {
 
+	kon_init();
+
+	kon_deinit();
+
 	return EXIT_SUCCESS;
 }
