@@ -274,7 +274,12 @@ void kon_setWindowPos(kon_window_t *window, int x, int y) {
 	XFlush(kon_ctx->display);
 }
 
-/* void kon_setWindowSize(kon_window_t *window, int width, int height); */
+void kon_setWindowSize(kon_window_t *window, int width, int height) {
+	if (!window || !kon_ctx) return;
+
+	XResizeWindow(kon_ctx->display, window->window, width, height);
+	XFlush(kon_ctx->display);
+}
 
 int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 	if (!window || !kon_ctx || !event) return 0;
