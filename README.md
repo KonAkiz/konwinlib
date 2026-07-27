@@ -104,6 +104,17 @@ int main(void) {
 }
 ```
 
+If you wish to move or resize a window, you could use these built-in functions:
+```c
+/* moving windows */
+
+kon_setWindowPos(kon_window_t *window, int x, int y);
+
+/* resizing windows */
+
+kon_setWindowSize(kon_window_t *window, int width, int height);
+```
+
 This thing has only been tested with a basic software renderer. [KonSofRen](https://github.com/KonAkiz/konsofren) to be exact. 
 
 Even though it's closer to a rasterizer as of the creation of this README.md. I will still be calling it a software renderer.
