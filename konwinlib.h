@@ -404,6 +404,12 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 
 	return window;
 }
+
+void kon_destroyWindow(kon_window_t *window) {
+	if (!window) return;
+	if (window->hwnd) DestroyWindow(window->hwnd);
+	free(window);
+}
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
