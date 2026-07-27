@@ -44,7 +44,8 @@ typedef enum kon_windowFlags {
 	KON_WINDOW_TRANSPARENT = 1 << 0,
 	KON_WINDOW_NO_DECOR = 1 << 1,
 	KON_WINDOW_ALWAYS_ONTOP = 1 << 2,
-	KON_WINDOW_CENTER = 1 << 3
+	KON_WINDOW_CENTER = 1 << 3,
+	KON_WINDOW_RESIZABLE = 1 << 4
 } kon_windowFlags_t;
 
 typedef enum kon_eventType {
@@ -227,6 +228,14 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 		Atom wm_above = XInternAtom(kon_ctx->display, "_NET_WM_STATE_ABOVE", False);
 		XChangeProperty(kon_ctx->display, window->window, wm_state, XA_ATOM, 32,
 						PropModeReplace, (unsigned char *)&wm_above, 1);
+	}
+
+	if (!(flags & KON_WINDOW_RESIZABLE)) {
+		XSizeHints hints;
+		hints.flags = PMinSize | PMaxSize;
+		hints.min_width  = hints.max_width  = width;
+		hints.min_height = hints.max_height = height;
+		XSetWMNormalHints(kon_ctx->display, window->window, &hints);
 	}
 
 	window->wm_delete = XInternAtom(kon_ctx->display, "WM_DELETE_WINDOW", False);
