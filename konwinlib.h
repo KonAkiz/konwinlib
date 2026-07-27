@@ -360,7 +360,7 @@ bool kon_init(void) {
 
 	ctx->hInstance = GetModuleHandle(NULL);
 
-	WNDCLASS wc = {0};
+	WNDCLASSEX wc = {0};
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.lpfnWndProc = kon_wndProc;
 	wc.hInstance = ctx->hInstance;
