@@ -71,7 +71,7 @@ kon_time kon_getTime(void) {
 }
 
 void kon_sleep(kon_time seconds) {
-	sleep((DWORD)(seconds * 1000.0));
+	Sleep((DWORD)(seconds * 1000.0));
 }
 
 #else
