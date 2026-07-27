@@ -60,9 +60,11 @@ cmake --build build
 <details>
 <summary>GNU Make examples build</summary>
 In the project directory/folder, run the following command.
+
 ```sh
 make
 ```
+
 yes, just that.
 </details>
 
