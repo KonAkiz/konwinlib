@@ -29,6 +29,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 /*** definitions ***/
 
@@ -79,7 +80,6 @@ static kon_context_t *kon_ctx;
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/Xrandr.h>
-#include <stdlib.h>
 #include <string.h>
 
 struct kon_context {
