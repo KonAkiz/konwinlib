@@ -15,8 +15,6 @@ It's very basic and simple as of now since it's still early in development.
 
 ### Supported Platforms:
 - linux
-
-### Planned future support:
 - windows
 
 ## Usage
@@ -111,6 +109,8 @@ This thing has only been tested with a basic software renderer. [KonSofRen](http
 Even though it's closer to a rasterizer as of the creation of this README.md. I will still be calling it a software renderer.
 
 My [main.c file](examples/main.c) contains an example implementation that's hooked up to a software renderer. You can use it as an example.
+
+You can alse see a more minimal example in my [minimal.c file](examples/minimal.c).
 
 If you wish to see an example setup, you can check my [examples dir/folder](examples) or my [main.c file](examples/main.c) that I use for prototyping.
 
