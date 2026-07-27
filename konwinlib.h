@@ -123,6 +123,7 @@ struct kon_window {
 	bool owns_colormap;
 	Atom wm_delete;
 	bool shouldClose;
+	int exitKey;
 };
 
 kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags) {
@@ -257,6 +258,8 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 	XMapWindow(kon_ctx->display, window->window);
 	XFlush(kon_ctx->display);
 
+	window->exitKey = 0;
+
 	window->shouldClose = false;
 
 	return window;
@@ -273,6 +276,11 @@ void kon_destroyWindow(kon_window_t *window) {
 	XFlush(kon_ctx->display);
 
 	free(window);
+}
+
+void kon_setExitKey(kon_window_t *window, int key) {
+	if (!window) return;
+	window->exitKey = key;
 }
 
 void kon_setWindowPos(kon_window_t *window, int x, int y) {
@@ -333,6 +341,9 @@ int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 	if (xev.type == KeyPress) {
 		event->type = KON_EVENT_KEY_DOWN;
 		event->key = (int)XLookupKeysym(&xev.xkey, 0);
+		if (window->exitKey != 0 && event->key == window->exitKey) {
+			window->shouldClose = true;
+		}
 		return 1;
 	}
 
@@ -385,6 +396,7 @@ struct kon_window {
 	bool hasKeyEvent;
 	kon_eventType_t keyEventType;
 	int keyEventKey;
+	int exitKey;
 };
 
 LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -401,6 +413,9 @@ LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 			window->hasKeyEvent = true;
 			window->keyEventType = KON_EVENT_KEY_DOWN;
 			window->keyEventKey = (int)wParam;
+			if (window->exitKey != 0 && (int)wParam == window->exitKey) {
+				window->shouldClose = true;
+			}
 		}
 		break;
 	case WM_KEYUP:
@@ -466,6 +481,7 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 	window->shouldClose = false;
 	window->hasResizeEvent = false;
 	window->isTransparent = (flags & KON_WINDOW_TRANSPARENT);
+	window->exitKey = 0;
 
 	DWORD style;
 	if (flags & KON_WINDOW_NO_DECOR) {
@@ -521,6 +537,12 @@ void kon_destroyWindow(kon_window_t *window) {
 bool kon_windowShouldClose(kon_window_t *window) {
 	if (!window) return true;
 	return window->shouldClose;
+}
+
+
+void kon_setExitKey(kon_window_t *window, int key) {
+	if (!window) return;
+	window->exitKey = key;
 }
 
 void kon_setWindowPos(kon_window_t *window, int x, int y) {
