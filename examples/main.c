@@ -51,6 +51,16 @@ int main(void) {
 
 	kon_setWindowSize(win, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
 
+	int x, y, width, height;
+
+	kon_getWindowPos(win, &x, &y);
+
+	kon_getWindowSize(win, &width, &height);
+
+	printf("Window position is: x:%d y:%d\n", x, y);
+
+	printf("Window size is: x:%d y:%d\n", width, height);
+
 	kon_event_t event;
 	while (!kon_windowShouldClose(win)) {
 		while (kon_pollEvent(win, &event)) {
