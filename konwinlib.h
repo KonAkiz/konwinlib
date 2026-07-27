@@ -394,7 +394,15 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 	window->shouldClose = false;
 	window->hasResizeEvent = false;
 
-	DWORD style = (flags & KON_WINDOW_NO_DECOR) ? WS_POPUP : WS_OVERLAPPEDWINDOW;
+	DWORD style;
+	if (flags & KON_WINDOW_NO_DECOR) {
+		style = WS_POPUP;
+	} else {
+		style = WS_OVERLAPPEDWINDOW;
+		if (!(flags & KON_WINDOW_RESIZABLE)) {
+			style &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
+		}
+	}
 
 	window->hwnd = CreateWindowEx(0, "KonWinLibClass", title, style, x, y, width, height, NULL, NULL, kon_ctx->hInstance, window);
 
