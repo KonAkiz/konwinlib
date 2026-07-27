@@ -322,6 +322,18 @@ struct kon_context {
 	HINSTANCE hInstance;
 };
 
+LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+	switch (msg) {
+	case WM_CLOSE:
+		/* will work on this once we make the event queue */
+		break;
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
+	}
+	return DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
 bool kon_init(void) {
 	kon_context_t *ctx = malloc(sizeof(kon_context_t));
 	if (!ctx) return false;
