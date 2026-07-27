@@ -330,9 +330,22 @@ struct kon_window {
 };
 
 LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+	kon_window_t *window = (kon_window_t *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+
 	switch (msg) {
+	case WM_NCCREATE:
+		CREATESTRUCT *cs = (CREATESTRUCT *)lParam;
+		SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)cs->lpCreateParams);
+		break;
 	case WM_CLOSE:
-		/* will work on this once we make the event queue */
+		if (window) window->shouldClose = true;
+		break;
+	case WM_SIZE:
+		if (window) {
+			window->hasResizeEvent = true;
+			window->resizeWidth  = LOWORD(lParam);
+			window->resizeHeight = HIWORD(lParam);
+		}
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
