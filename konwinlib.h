@@ -68,6 +68,9 @@ bool kon_windowShouldClose(kon_window_t *window);
 void kon_setWindowPos(kon_window_t *window, int x, int y);
 void kon_setWindowSize(kon_window_t *window, int width, int height);
 
+void kon_getWindowPos(kon_window_t *window, int *x, int *y);
+void kon_getWindowSize(kon_window_t *window, int *width, int *height);
+
 int kon_pollEvent(kon_window_t *window, kon_event_t *event);
 void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height);
 
@@ -280,6 +283,18 @@ void kon_setWindowSize(kon_window_t *window, int width, int height) {
 	XResizeWindow(kon_ctx->display, window->window, width, height);
 	XFlush(kon_ctx->display);
 }
+
+void kon_getWindowPos(kon_window_t *window, int *x, int *y) {
+	if (!window || !kon_ctx || !x || !y) return;
+
+	Window child;
+	XTranslateCoordinates(kon_ctx->display, window->window, RootWindow(kon_ctx->display, DefaultScreen(kon_ctx->display)),
+						  0, 0, x, y, &child);
+}
+
+/* void kon_getWindowSize(kon_window_t *window, int *width, int *height) { */
+
+/* } */
 
 int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 	if (!window || !kon_ctx || !event) return 0;
