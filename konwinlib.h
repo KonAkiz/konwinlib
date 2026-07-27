@@ -220,7 +220,7 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 	}
 
 	XStoreName(kon_ctx->display, window->window, title);
-	XSelectInput(kon_ctx->display, window->window, ExposureMask | StructureNotifyMask);
+	XSelectInput(kon_ctx->display, window->window, ExposureMask | StructureNotifyMask | KeyPressMask | KeyReleaseMask );
 
 	if (flags & KON_WINDOW_NO_DECOR) {
 		Atom motif_hints = XInternAtom(kon_ctx->display, "_MOTIF_WM_HINTS", False);
