@@ -322,6 +322,13 @@ struct kon_context {
 	HINSTANCE hInstance;
 };
 
+struct kon_window {
+	HWND hwnd;
+	bool shouldClose;
+	bool hasResizeEvent;
+	int resizeWidth, resizeHeight;
+};
+
 LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 	case WM_CLOSE:
