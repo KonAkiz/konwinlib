@@ -49,7 +49,7 @@ int main(void) {
 
 	kon_event_t event;
 	while (!kon_windowShouldClose(win)) {
-		while (pollEvent(win, &event)) {
+		while (kon_pollEvent(win, &event)) {
 			if (event.type == KON_EVENT_RESIZE) {
 				kon_resizeFramebuffer(fb, event.width, event.height);
 
@@ -63,7 +63,7 @@ int main(void) {
 		kon_fillRectangle(fb, 50, 50, 50, 50, 0xFF0000FF);
 
 		kon_exportPixels(fb, konFormatBGRA8, export_buf);
-		blitPixels(win, (uint32_t *)export_buf, fb->width, fb->height);
+		kon_blitPixels(win, (uint32_t *)export_buf, fb->width, fb->height);
 
 		kon_sleep(1.0 / FPS);
 	}

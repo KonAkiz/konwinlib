@@ -28,6 +28,11 @@ int main(void) {
 		return EXIT_FAILURE;
 	}
 
+	kon_event_t event;
+	while (!kon_windowShouldClose(window)) {
+		while (kon_pollEvent(window, &event)) {}
+	}
+
 	puts("tested!");
 
 	/*** cleanup ***/
