@@ -404,7 +404,9 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 		}
 	}
 
-	window->hwnd = CreateWindowEx(0, "KonWinLibClass", title, style, x, y, width, height, NULL, NULL, kon_ctx->hInstance, window);
+	DWORD exStyle = (flags & KON_WINDOW_ALWAYS_ONTOP) ? WS_EX_TOPMOST : 0;
+
+	window->hwnd = CreateWindowEx(exStyle, "KonWinLibClass", title, style, x, y, width, height, NULL, NULL, kon_ctx->hInstance, window);
 
 	if (!window->hwnd) {
 		free(window);
