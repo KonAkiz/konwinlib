@@ -55,7 +55,7 @@ int main(void) {
 
 	kon_event_t event;
 	while (!kon_windowShouldClose(win)) {
-		while (pollEvent(win, &event)) {/* you can use this for handling events later */}
+		while (kon_pollEvent(win, &event)) {/* you can use this for handling events later */}
 	}
 	
 	kon_destroyWindow(win);
@@ -95,7 +95,7 @@ int main(void) {
 
 	kon_event_t event;
 	while (!kon_windowShouldClose(win)) {
-		while (pollEvent(win, &event)) {/* you can use this for handling events later */}
+		while (kon_pollEvent(win, &event)) {/* you can use this for handling events later */}
 	}
 	
 	kon_destroyWindow(win);
