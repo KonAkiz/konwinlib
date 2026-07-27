@@ -65,8 +65,8 @@ void kon_destroyWindow(kon_window_t *window);
 
 bool kon_windowShouldClose(kon_window_t *window);
 
-int pollEvent(kon_window_t *window, kon_event_t *event);
-void blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height);
+int kon_pollEvent(kon_window_t *window, kon_event_t *event);
+void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height);
 
 /*** implementation ***/
 
@@ -264,7 +264,7 @@ void kon_destroyWindow(kon_window_t *window) {
 	free(window);
 }
 
-int pollEvent(kon_window_t *window, kon_event_t *event) {
+int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 	if (!window || !kon_ctx || !event) return 0;
 
 	event->type = KON_EVENT_NONE;
@@ -298,7 +298,7 @@ bool kon_windowShouldClose(kon_window_t *window) {
 
 /* TODO: implement the rest of these */
 
-void blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height) {
+void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height) {
 	if (!window || !kon_ctx || !pixels) return;
 
 	XImage *ximg = XCreateImage(kon_ctx->display, window->visual, window->depth, ZPixmap, 0, (char *)pixels, width, height, 32, 0);
@@ -416,7 +416,7 @@ bool kon_windowShouldClose(kon_window_t *window) {
 	return window->shouldClose;
 }
 
-int pollEvent(kon_window_t *window, kon_event_t *event) {
+int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 	if (!window || !event) return 0;
 
 	event->type = KON_EVENT_NONE;
