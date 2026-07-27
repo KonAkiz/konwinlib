@@ -31,9 +31,44 @@ Alternatively, you could define it during compile time.
 ```sh
 cc -std=c99 -DKONWINLIB_IMPLEMENTATION -D_POSIX_C_SOURCE=200809L main.c -o test -lX11 -lXrandr
 ```
-I also define _POSIX_C_SOURCE as 200809l because one of the projects used for the example needs it defined to expose some posix stuff we need.
+I also define _POSIX_C_SOURCE as 200809L because one of the projects used for the example needs it defined to expose some posix stuff we need.
 
 ## Examples
+
+I have 2 example files in my examples folder for you. One is my [minimal.c](examples/minimal.c) file, and the other is my [main.c](examples/main.c) file which includes a software renderer in the example.
+
+You can build them using CMake or GNU make via my [CMakeLists.txt](CMakeLists.txt) file and my [Makefile](Makefile):
+
+<details>
+<summary>CMake examples build</summary>
+Run these in your terminal within the project directory/folder depending on the toolset you have.
+
+Build without Ninja:
+```sh
+cmake -B build
+cmake --build build
+```
+
+Build with Ninja:
+```sh
+cmake -B build -G Ninja
+cmake --build build
+```
+
+</details>
+
+<details>
+<summary>GNU Make examples build</summary>
+In the project directory/folder, run the following command.
+```sh
+make
+```
+yes, just that.
+</details>
+
+I haven't tried it with any other make system so... yeah...
+
+
 
 A small mini example to what it looks like when implemented into a project is this:
 ```c
