@@ -5,3 +5,6 @@
 *.o
 program
 test*
+
+main-test
+minimal-test
