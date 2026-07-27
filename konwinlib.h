@@ -415,6 +415,33 @@ bool kon_windowShouldClose(kon_window_t *window) {
 	if (!window) return true;
 	return window->shouldClose;
 }
+
+int pollEvent(kon_window_t *window, kon_event_t *event) {
+	if (!window || !event) return 0;
+
+	event->type = KON_EVENT_NONE;
+
+	MSG msg;
+	if (!PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) return 0;
+
+	TranslateMessage(&msg);
+	DispatchMessage(&msg);
+
+	if (window->hasResizeEvent) {
+		event->type = KON_EVENT_RESIZE;
+		event->width  = window->resizeWidth;
+		event->height = window->resizeHeight;
+		window->hasResizeEvent = false;
+		return 1;
+	}
+
+	if (window->shouldClose) {
+		event->type = KON_EVENT_CLOSE;
+		return 1;
+	}
+
+	return 1;
+}
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
