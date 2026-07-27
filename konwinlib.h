@@ -333,10 +333,11 @@ LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 	kon_window_t *window = (kon_window_t *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
 	switch (msg) {
-	case WM_NCCREATE:
+	case WM_NCCREATE: {
 		CREATESTRUCT *cs = (CREATESTRUCT *)lParam;
 		SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)cs->lpCreateParams);
 		break;
+	}
 	case WM_CLOSE:
 		if (window) window->shouldClose = true;
 		break;
