@@ -380,6 +380,9 @@ struct kon_window {
 	bool hasResizeEvent;
 	int resizeWidth, resizeHeight;
 	bool isTransparent;
+	bool hasKeyEvent;
+	kon_eventType_t keyEventType;
+	int keyEventKey;
 };
 
 LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -391,6 +394,20 @@ LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 		SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)cs->lpCreateParams);
 		break;
 	}
+	case WM_KEYDOWN:
+		if (window) {
+			window->hasKeyEvent = true;
+			window->keyEventType = KON_EVENT_KEY_DOWN;
+			window->keyEventKey = (int)wParam;
+		}
+		break;
+	case WM_KEYUP:
+		if (window) {
+			window->hasKeyEvent = true;
+			window->keyEventType = KON_EVENT_KEY_UP;
+			window->keyEventKey = (int)wParam;
+		}
+		break;
 	case WM_CLOSE:
 		if (window) window->shouldClose = true;
 		break;
@@ -556,6 +573,13 @@ int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 
 	if (window->shouldClose) {
 		event->type = KON_EVENT_CLOSE;
+		return 1;
+	}
+
+	if (window->hasKeyEvent) {
+		event->type = window->keyEventType;
+		event->key  = window->keyEventKey;
+		window->hasKeyEvent = false;
 		return 1;
 	}
 
