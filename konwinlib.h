@@ -501,6 +501,25 @@ void kon_setWindowSize(kon_window_t *window, int width, int height) {
 	SetWindowPos(window->hwnd, NULL, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
 }
 
+
+void kon_getWindowPos(kon_window_t *window, int *x, int *y) {
+	if (!window || !x || !y) return;
+
+	RECT rect;
+	GetWindowRect(window->hwnd, &rect);
+	*x = rect.left;
+	*y = rect.top;
+}
+
+void kon_getWindowSize(kon_window_t *window, int *width, int *height) {
+	if (!window || !width || !height) return;
+
+	RECT rect;
+	GetWindowRect(window->hwnd, &rect);
+	*width  = rect.right  - rect.left;
+	*height = rect.bottom - rect.top;
+}
+
 int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 	if (!window || !event) return 0;
 
