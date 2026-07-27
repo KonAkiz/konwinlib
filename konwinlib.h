@@ -292,9 +292,14 @@ void kon_getWindowPos(kon_window_t *window, int *x, int *y) {
 						  0, 0, x, y, &child);
 }
 
-/* void kon_getWindowSize(kon_window_t *window, int *width, int *height) { */
+void kon_getWindowSize(kon_window_t *window, int *width, int *height) {
+	if (!window || !kon_ctx || !width || !height) return;
 
-/* } */
+	XWindowAttributes attrs;
+	XGetWindowAttributes(kon_ctx->display, window->window, &attrs);
+	*width  = attrs.width;
+	*height = attrs.height;
+}
 
 int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 	if (!window || !kon_ctx || !event) return 0;
