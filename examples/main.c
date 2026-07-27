@@ -47,6 +47,10 @@ int main(void) {
 		kon_deinit();
 	}
 
+	kon_setWindowPos(win, 1000, 80);
+
+	kon_setWindowSize(win, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+
 	kon_event_t event;
 	while (!kon_windowShouldClose(win)) {
 		while (kon_pollEvent(win, &event)) {
