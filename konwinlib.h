@@ -478,6 +478,50 @@ int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 
 	return 1;
 }
+
+void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height) {
+	if (!window || !pixels) return;
+
+	HDC screenDC = GetDC(NULL);
+	HDC memDC = CreateCompatibleDC(screenDC);
+
+	BITMAPINFO bmi = {0};
+	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmi.bmiHeader.biWidth = width;
+	bmi.bmiHeader.biHeight = -height; /* did this because... windows for some reason draws from the bottom up... -_- */
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biBitCount = 32;
+	bmi.bmiHeader.biCompression = BI_RGB;
+
+	void *dibPixels;
+	HBITMAP hbm = CreateDIBSection(screenDC, &bmi, DIB_RGB_COLORS, &dibPixels, NULL, 0);
+	memcpy(dibPixels, pixels, (size_t)width * height * 4);
+
+	HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, hbm);
+
+	if (window->isTransparent) {
+		POINT srcPos = {0, 0};
+		SIZE size = {width, height};
+		POINT dstPos;
+		RECT winRect;
+		GetWindowRect(window->hwnd, &winRect);
+		dstPos.x = winRect.left;
+		dstPos.y = winRect.top;
+
+		BLENDFUNCTION blend = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
+		UpdateLayeredWindow(window->hwnd, screenDC, &dstPos, &size, memDC, &srcPos, 0, &blend, ULW_ALPHA);
+	} else {
+		HDC winDC = GetDC(window->hwnd);
+		BitBlt(winDC, 0, 0, width, height, memDC, 0, 0, SRCCOPY);
+		ReleaseDC(window->hwnd, winDC);
+	}
+
+	SelectObject(memDC, oldBmp);
+	DeleteObject(hbm);
+	DeleteDC(memDC);
+	ReleaseDC(NULL, screenDC);
+}
+
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
