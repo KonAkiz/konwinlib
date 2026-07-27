@@ -312,8 +312,34 @@ void blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int hei
 	XFlush(kon_ctx->display);
 }
 
+/*** windows implementation ***/
+
 #elif defined(_WIN32)
-	#error "konwinlib.h: Windows backend not implemented yet"
+
+#include <windows.h>
+
+struct kon_context {
+	HINSTANCE hInstance;
+};
+
+bool kon_init(void) {
+	kon_context_t *ctx = malloc(sizeof(kon_context_t));
+	if (!ctx) return false;
+
+	ctx->hInstance = GetModuleHandle(NULL);
+
+	kon_ctx = ctx;
+	return true;
+}
+
+void kon_deinit(void) {
+	if (!kon_ctx) return;
+
+	free(kon_ctx);
+	kon_ctx = NULL;
+}
+
+
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
