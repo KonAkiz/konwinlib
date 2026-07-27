@@ -340,6 +340,18 @@ bool kon_init(void) {
 
 	ctx->hInstance = GetModuleHandle(NULL);
 
+	WNDCLASS wc = {0};
+	wc.cbSize = sizeof(WNDCLASSEX);
+	wc.lpfnWndProc = kon_wndProc;
+	wc.hInstance = ctx->hInstance;
+	wc.lpszClassName = "KonWinLibClass";
+	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+
+	if (!RegisterClassEx(&wc)) {
+		free(ctx);
+		return false;
+	}
+
 	kon_ctx = ctx;
 	return true;
 }
