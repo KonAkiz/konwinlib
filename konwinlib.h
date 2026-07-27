@@ -406,6 +406,25 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 
 	DWORD exStyle = (flags & KON_WINDOW_ALWAYS_ONTOP) ? WS_EX_TOPMOST : 0;
 
+	if (flags & KON_WINDOW_CENTER) {
+		POINT cursor;
+		GetCursorPos(&cursor);
+
+		HMONITOR hmon = MonitorFromPoint(cursor, MONITOR_DEFAULTTONEAREST);
+
+		MONITORINFO mi;
+		mi.cbSize = sizeof(MONITORINFO);
+		GetMonitorInfo(hmon, &mi);
+
+		int mon_x = mi.rcMonitor.left;
+		int mon_y = mi.rcMonitor.top;
+		int mon_width = mi.rcMonitor.right - mi.rcMonitor.left;
+		int mon_height = mi.rcMonitor.bottom - mi.rcMonitor.top;
+
+		x = mon_x + (mon_width  - width ) / 2;
+		y = mon_y + (mon_height - height) / 2;
+	}
+
 	window->hwnd = CreateWindowEx(exStyle, "KonWinLibClass", title, style, x, y, width, height, NULL, NULL, kon_ctx->hInstance, window);
 
 	if (!window->hwnd) {
