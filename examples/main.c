@@ -25,7 +25,7 @@ int main(void) {
 		return 1;
 	}
 
-	kon_window_t *win = kon_createWindow(WINDOW_TITLE, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, KON_WINDOW_RESIZABLE | KON_WINDOW_CENTER);
+	kon_window_t *win = kon_createWindow(WINDOW_TITLE, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, KON_WINDOW_TRANSPARENT | KON_WINDOW_RESIZABLE | KON_WINDOW_CENTER);
 	if (!win) {
 		fprintf(stderr, "kon_createWindow failed!\n");
 		kon_deinit();
