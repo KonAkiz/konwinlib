@@ -327,6 +327,7 @@ struct kon_window {
 	bool shouldClose;
 	bool hasResizeEvent;
 	int resizeWidth, resizeHeight;
+	bool isTransparent;
 };
 
 LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -393,6 +394,7 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 
 	window->shouldClose = false;
 	window->hasResizeEvent = false;
+	window->isTransparent = false;
 
 	DWORD style;
 	if (flags & KON_WINDOW_NO_DECOR) {
@@ -404,7 +406,9 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 		}
 	}
 
-	DWORD exStyle = (flags & KON_WINDOW_ALWAYS_ONTOP) ? WS_EX_TOPMOST : 0;
+	DWORD exStyle = 0;
+	if (flags & KON_WINDOW_ALWAYS_ONTOP) exStyle |= WS_EX_TOPMOST;
+	if (flags & KON_WINDOW_TRANSPARENT)  exStyle |= WS_EX_LAYERED;
 
 	if (flags & KON_WINDOW_CENTER) {
 		POINT cursor;
