@@ -65,6 +65,9 @@ void kon_destroyWindow(kon_window_t *window);
 
 bool kon_windowShouldClose(kon_window_t *window);
 
+void kon_setWindowPos(kon_window_t *window, int x, int y);
+void kon_setWindowSize(kon_window_t *window, int width, int height);
+
 int kon_pollEvent(kon_window_t *window, kon_event_t *event);
 void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height);
 
@@ -263,6 +266,15 @@ void kon_destroyWindow(kon_window_t *window) {
 
 	free(window);
 }
+
+void kon_setWindowPos(kon_window_t *window, int x, int y) {
+	if (!window || !kon_ctx) return;
+
+	XMoveWindow(kon_ctx->display, window->window, x, y);
+	XFlush(kon_ctx->display);
+}
+
+/* void kon_setWindowSize(kon_window_t *window, int width, int height); */
 
 int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 	if (!window || !kon_ctx || !event) return 0;
