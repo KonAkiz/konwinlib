@@ -37,10 +37,11 @@ I also define _POSIX_C_SOURCE as 200809L because one of the projects used for th
 
 I have 2 example files in my examples folder for you. One is my [minimal.c](examples/minimal.c) file, and the other is my [main.c](examples/main.c) file which includes a software renderer in the example.
 
-You can build them using CMake or GNU make via my [CMakeLists.txt](CMakeLists.txt) file and my [Makefile](Makefile):
+You can build them using CMake or make via my [CMakeLists.txt](CMakeLists.txt) file and my [Makefile](Makefile):
 
 <details>
 <summary>CMake examples build</summary>
+
 Run these in your terminal within the project directory/folder depending on the toolset you have.
 
 Build without Ninja:
@@ -58,7 +59,8 @@ cmake --build build
 </details>
 
 <details>
-<summary>GNU Make examples build</summary>
+<summary>Make examples build</summary>
+
 In the project directory/folder, run the following command.
 
 ```sh
@@ -66,6 +68,7 @@ make
 ```
 
 yes, just that.
+
 </details>
 
 I haven't tried it with any other make system so... yeah...
