@@ -14,6 +14,7 @@ This project is a single header library that was built with [c99](https://en.wik
 It's very basic and simple as of now since it's still early in development.
 
 ### Supported Platforms:
+
 - linux
 - windows
 
@@ -148,11 +149,11 @@ If you wish to move or resize a window, you could use these built-in functions:
 ```c
 /* moving windows */
 
-kon_setWindowPos(kon_window_t *window, int x, int y);
+kon_setWindowPos(window, x, y);
 
 /* resizing windows */
 
-kon_setWindowSize(kon_window_t *window, int width, int height);
+kon_setWindowSize(window, width, height);
 ```
 
 This thing has only been tested with a basic software renderer. [KonSofRen](https://github.com/KonAkiz/konsofren) to be exact. 
