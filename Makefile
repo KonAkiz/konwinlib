@@ -1,13 +1,10 @@
+.POSIX:
+
+#
+# COMPILER CONFIGS
+#
+
 CC=cc
-
-MAIN_SRC=examples/main.c
-MINIMAL_SRC=examples/minimal.c
-
-MAIN_OBJ=$(MAIN_SRC:.c=.o)
-MINIMAL_OBJ=$(MINIMAL_SRC:.c=.o)
-
-MAIN_TARGET=main-test
-MINIMAL_TARGET=minimal-test
 
 CFLAGS=-Wall -Wextra -Werror -pedantic -std=c99
 
@@ -15,7 +12,30 @@ INC=-I.
 
 LIBS=-L. -lX11 -lXrandr
 
+#
+# SOURCE FILES
+#
+
+MAIN_SRC=examples/main.c
+MINIMAL_SRC=examples/minimal.c
+
+#
+# OBJECT FILES
+#
+
+MAIN_OBJ=examples/main.o
+MINIMAL_OBJ=examples/minimal.o
+
+#
+# BUILD TARGETS
+#
+
+MAIN_TARGET=main-test
+MINIMAL_TARGET=minimal-test
+
 .PHONY: clean test test-main test-minimal
+
+.IGNORE: clean
 
 all: ${MAIN_TARGET} ${MINIMAL_TARGET}
 
@@ -25,7 +45,9 @@ ${MAIN_TARGET}: ${MAIN_OBJ}
 ${MINIMAL_TARGET}: ${MINIMAL_OBJ}
 	${CC} ${MINIMAL_OBJ} -o ${MINIMAL_TARGET} ${CFLAGS} ${INC} ${LIBS}
 
-%.o: %.c
+.SUFFIXES: .c .o
+
+.c.o:
 	${CC} -c ${CFLAGS} $< -o $@ ${INC}
 
 test-main: ${MAIN_TARGET}
