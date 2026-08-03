@@ -80,8 +80,8 @@ int kon_pollEvent(kon_window_t *window, kon_event_t *event);
 void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height);
 
 // added these for web dev
-typedef void (*kon_mainLoopFn)(void *userdata);
-void kon_runMainLoop(kon_window_t *window, kon_mainLoopFn callback, void *userdata);
+typedef void (*kon_mainLoopFn)(void *userData);
+void kon_runMainLoop(kon_window_t *window, kon_mainLoopFn callback, void *userData);
 
 /*** implementation ***/
 
@@ -716,8 +716,8 @@ static EM_BOOL kon_keyUpCallback_(int eventType, const EmscriptenKeyboardEvent *
 	kon_window_t *window = (kon_window_t *)userData;
 
 	window->hasKeyEvent = true;
-	window->hasEventType = KON_EVENT_KEY_UP;
-	window->keyEventKey = ->keyCode;
+	window->keyEventType = KON_EVENT_KEY_UP;
+	window->keyEventKey = e->keyCode;
 
 	return EM_TRUE;
 }
@@ -733,7 +733,7 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 	kon_window_t *window = malloc(sizeof(kon_window_t));
 	if (!window) return NULL;
 
-	strcpy(window->canvasID, "#canvas", sizeof(window->canvasID) - 1);
+	strncpy(window->canvasID, "#canvas", sizeof(window->canvasID) - 1);
 	window->canvasID[sizeof(window->canvasID) - 1] = '\0';
 
 	window->shouldClose = false;
@@ -863,7 +863,7 @@ typedef struct {
 	void *userData;
 } kon_mainLoopCtx_;
 
-struct void kon_mainLoopTrampoline_(void *art) {
+static void kon_mainLoopTrampoline_(void *arg) {
 	kon_mainLoopCtx_ *ctx = (kon_mainLoopCtx_ *)arg;
 
 	if (kon_windowShouldClose(ctx->window)) {
@@ -872,25 +872,25 @@ struct void kon_mainLoopTrampoline_(void *art) {
 		return;
 	}
 
-	ctx->callback(ctx->userdata);
+	ctx->callback(ctx->userData);
 }
 
-void kon_runMainLoop(kon_window_t *window, kon_mainLoopFn callback, void *userdata) {
+void kon_runMainLoop(kon_window_t *window, kon_mainLoopFn callback, void *userData) {
 	kon_mainLoopCtx_ *ctx = malloc(sizeof(kon_mainLoopCtx_));
 	if (!ctx) return;
 
 	ctx->window = window;
 	ctx->callback = callback;
-	ctx->userdata = userdata;
+	ctx->userData = userData;
 
 	emscripten_set_main_loop_arg(kon_mainLoopTrampoline_, ctx, 0, 1);
 }
 
 #else
 
-void kon_runMainLoop(kon_window_t *window, kon_mainLoopFN callback, void *userdata) {
+void kon_runMainLoop(kon_window_t *window, kon_mainLoopFn callback, void *userData) {
 	while (!kon_windowShouldClose(window)) {
-		callback(userdata);
+		callback(userData);
 	}
 }
 
