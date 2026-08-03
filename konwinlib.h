@@ -663,6 +663,10 @@ void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int
 #include <emscripten/html5.h>
 #include <string.h>
 
+struct kon_context {
+	int initialized;
+};
+
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
