@@ -863,6 +863,18 @@ typedef struct {
 	void *userData;
 } kon_mainLoopCtx_;
 
+struct void kon_mainLoopTrampoline_(void *art) {
+	kon_mainLoopCtx_ *ctx = (kon_mainLoopCtx_ *)arg;
+
+	if (kon_windowShouldClose(ctx->window)) {
+		emscripten_cancel_main_loop();
+		free(ctx);
+		return;
+	}
+
+	ctx->callback(ctx->userdata);
+}
+
 #endif /* __EMSCRIPTEN__ */
 
 #endif /* end of KONWINLIB_IMPLEMENTATION */
