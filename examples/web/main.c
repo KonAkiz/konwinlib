@@ -48,7 +48,7 @@ int main(void) {
 		return 1;
 	}
 
-	kon_window_t *window = kon_createWindow("kon demo", 100, 100, 640, 480, KON_WINDOW_NONE);
+	kon_window_t *window = kon_createWindow("web example", 100, 100, 640, 480, KON_WINDOW_NONE);
 	if (!window) {
 		fprintf(stderr, "failed to create window\n");
 		kon_deinit();
