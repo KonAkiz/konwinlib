@@ -875,6 +875,25 @@ struct void kon_mainLoopTrampoline_(void *art) {
 	ctx->callback(ctx->userdata);
 }
 
+void kon_runMainLoop(kon_window_t *window, kon_mainLoopFn callback, void *userdata) {
+	kon_mainLoopCtx_ *ctx = malloc(sizeof(kon_mainLoopCtx_));
+	if (!ctx) return;
+
+	ctx->window = window;
+	ctx->callback = callback;
+	ctx->userdata = userdata;
+
+	emscripten_set_main_loop_arg(kon_mainLoopTrampoline_, ctx, 0, 1);
+}
+
+#else
+
+void kon_runMainLoop(kon_window_t *window, kon_mainLoopFN callback, void *userdata) {
+	while (!kon_windowShouldClose(window)) {
+		callback(userdata);
+	}
+}
+
 #endif /* __EMSCRIPTEN__ */
 
 #endif /* end of KONWINLIB_IMPLEMENTATION */
