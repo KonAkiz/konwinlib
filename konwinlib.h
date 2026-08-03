@@ -767,6 +767,11 @@ bool kon_windowShouldClose(kon_window_t *window) {
 	return window->shouldClose;
 }
 
+void kon_setExitKey(kon_window_t *window, int key) {
+	if (!window) return;
+	window->exitKey = key;
+}
+
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
