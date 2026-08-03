@@ -781,6 +781,21 @@ void kon_setWindowSize(kon_window_t *window, int width, int height) {
 	emscripten_set_canvas_element_size(window->canvasID, width, height);
 }
 
+void kon_getWindowPos(kon_window_t *window, int *x, int *y) {
+	(void)window;
+	if (x) *x = 0;
+	if (y) *y = 0;
+}
+
+void kon_getWindowSize(kon_window_t *window, int *width, int *height) {
+	if (!window || !width || !height) return;
+
+	double w, h;
+	emscripten_get_element_css_size(window->canvasID, &w, &h);
+	*width  = (int)w;
+	*height = (int)h;
+}
+
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
