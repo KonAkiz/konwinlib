@@ -121,6 +121,11 @@ struct kon_window {
 
 	bool hasResizeEvent;
 	int resizeWidth, resizeHeight;
+
+	bool hasMouseEvent;
+	kon_eventType_t mouseEventType;
+	int mouseEventX, mouseEventY;
+	kon_mouseButton_t mouseEventButton;
 };
 
 bool kon_init(void) {
