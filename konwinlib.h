@@ -89,7 +89,199 @@ void kon_runMainLoop(kon_window_t *window, kon_mainLoopFn callback, void *userDa
 
 static kon_context_t *kon_ctx;
 
-#if defined(__linux__) || defined(__unix__)
+#ifdef __EMSCRIPTEN__
+
+#include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
+#include <string.h>
+
+struct kon_context {
+	int initialized;
+};
+
+struct kon_window {
+	char canvasID[64];
+	bool shouldClose;
+	int exitKey;
+
+	bool hasKeyEvent;
+	kon_eventType_t keyEventType;
+	int keyEventKey;
+
+	bool hasResizeEvent;
+	int resizeWidth, resizeHeight;
+};
+
+bool kon_init(void) {
+	kon_context_t *ctx = malloc(sizeof(kon_context_t));
+	if (!ctx) return false;
+
+	ctx->initialized = 1;
+	kon_ctx = ctx;
+	return true;
+}
+
+void kon_deinit(void) {
+	if (!kon_ctx) return;
+
+	free(kon_ctx);
+	kon_ctx = NULL;
+}
+
+static EM_BOOL kon_keyDownCallback_(int eventType, const EmscriptenKeyboardEvent *e, void *userData) {
+	(void)eventType;
+	kon_window_t *window = (kon_window_t *)userData;
+
+	window->hasKeyEvent = true;
+	window->keyEventType = KON_EVENT_KEY_DOWN;
+	window->keyEventKey = e->keyCode;
+
+	if (window->exitKey != 0 && window->keyEventKey == window->exitKey) {
+		window->shouldClose = true;
+	}
+
+	return EM_TRUE;
+}
+
+static EM_BOOL kon_keyUpCallback_(int eventType, const EmscriptenKeyboardEvent *e, void *userData) {
+	(void)eventType;
+	kon_window_t *window = (kon_window_t *)userData;
+
+	window->hasKeyEvent = true;
+	window->keyEventType = KON_EVENT_KEY_UP;
+	window->keyEventKey = e->keyCode;
+
+	return EM_TRUE;
+}
+
+kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags) {
+	(void)x; (void)y; (void)flags;
+
+	if (!kon_ctx) {
+		fprintf(stderr, "kon_createWindow: error creating window, no ctx\n");
+		return NULL;
+	}
+
+	kon_window_t *window = malloc(sizeof(kon_window_t));
+	if (!window) return NULL;
+
+	strncpy(window->canvasID, "#canvas", sizeof(window->canvasID) - 1);
+	window->canvasID[sizeof(window->canvasID) - 1] = '\0';
+
+	window->shouldClose = false;
+	window->exitKey = 0;
+	window->hasKeyEvent = false;
+	window->hasResizeEvent = false;
+
+	emscripten_set_canvas_element_size(window->canvasID, width, height);
+
+	EM_ASM({
+			try { document.title = UTF8ToString($0); } catch (e) {}
+	}, title);
+
+	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, window, EM_FALSE, kon_keyDownCallback_);
+	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, window, EM_FALSE, kon_keyUpCallback_);
+
+	return window;
+}
+
+void kon_destroyWindow(kon_window_t *window) {
+	if (!window) return;
+
+	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, NULL);
+	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, NULL);
+
+	free(window);
+}
+
+bool kon_windowShouldClose(kon_window_t *window) {
+	if (!window) return true;
+	return window->shouldClose;
+}
+
+void kon_setExitKey(kon_window_t *window, int key) {
+	if (!window) return;
+	window->exitKey = key;
+}
+
+void kon_setWindowPos(kon_window_t *window, int x, int y) {
+	(void)window; (void)x; (void)y;
+}
+
+void kon_setWindowSize(kon_window_t *window, int width, int height) {
+	if (!window) return;
+	emscripten_set_canvas_element_size(window->canvasID, width, height);
+}
+
+void kon_getWindowPos(kon_window_t *window, int *x, int *y) {
+	(void)window;
+	if (x) *x = 0;
+	if (y) *y = 0;
+}
+
+void kon_getWindowSize(kon_window_t *window, int *width, int *height) {
+	if (!window || !width || !height) return;
+
+	double w, h;
+	emscripten_get_element_css_size(window->canvasID, &w, &h);
+	*width  = (int)w;
+	*height = (int)h;
+}
+
+int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
+	if (!window || !event) return 0;
+
+	event->type = KON_EVENT_NONE;
+
+	if (window->hasResizeEvent) {
+		event->type = KON_EVENT_RESIZE;
+		event->width = window->resizeWidth;
+		event->height = window->resizeHeight;
+		window->hasResizeEvent = false;
+		return 1;
+	}
+
+	if (window->hasKeyEvent) {
+		event->type = window->keyEventType;
+		event->key  = window->keyEventKey;
+		window->hasKeyEvent = false;
+		return 1;
+	}
+
+	return 0;
+}
+
+EM_JS(void, kon_jsBlit_, (const char *canvasID, uint32_t *pixels, int width, int height), {
+	var sel = UTF8ToString(canvasID);
+	var canvas = document.querySelector(sel);
+	if (!canvas) return;
+	
+	if (!canvas.__konCtx) canvas.__konCtx = canvas.getContext('2d');
+	var ctx = canvas.__konCtx;
+
+	if (!canvas.__konImgData || canvas.__konImgData.width !== width || canvas.__konImgData.height !== height) {
+		canvas.__konImgData = ctx.createImageData(width, height);
+	}
+	var imgData = canvas.__konImgData;
+
+	var dst = new Uint32Array(imgData.data.buffer);
+	var srcIdx = pixels >> 2;
+	var count = width * height;
+
+	for (var i = 0; i < count; i++) {
+		var px = HEAPU32[srcIdx + i];
+		dst[i] = (px & 0xFF00FF00) | ((px & 0x00FF0000) >>> 16) | ((px & 0x000000FF) << 16);
+	}
+
+	ctx.putImageData(imgData, 0, 0);
+});
+
+void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height) {
+	if (!window || !pixels) return;
+	kon_jsBlit_(window->canvasID, (uint32_t *)pixels, width, height);
+}
+
+#elif defined(__linux__) || defined(__unix__)
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -655,198 +847,6 @@ void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int
 	DeleteObject(hbm);
 	DeleteDC(memDC);
 	ReleaseDC(NULL, screenDC);
-}
-
-#elif defined(__EMSCRIPTEN__)
-
-#include <emscripten/emscripten.h>
-#include <emscripten/html5.h>
-#include <string.h>
-
-struct kon_context {
-	int initialized;
-};
-
-struct kon_window {
-	char canvasID[64];
-	bool shouldClose;
-	int exitKey;
-
-	bool hasKeyEvent;
-	kon_eventType_t keyEventType;
-	int keyEventKey;
-
-	bool hasResizeEvent;
-	int resizeWidth, resizeHeight;
-};
-
-bool kon_init(void) {
-	kon_context_t *ctx = malloc(sizeof(kon_context_t));
-	if (!ctx) return false;
-
-	ctx->initialized = 1;
-	kon_ctx = ctx;
-	return true;
-}
-
-void kon_deinit(void) {
-	if (!kon_ctx) return;
-
-	free(kon_ctx);
-	kon_ctx = NULL;
-}
-
-static EM_BOOL kon_keyDownCallback_(int eventType, const EmscriptenKeyboardEvent *e, void *userData) {
-	(void)eventType;
-	kon_window_t *window = (kon_window_t *)userData;
-
-	window->hasKeyEvent = true;
-	window->keyEventType = KON_EVENT_KEY_DOWN;
-	window->keyEventKey = e->keyCode;
-
-	if (window->exitKey != 0 && window->keyEventKey == window->exitKey) {
-		window->shouldClose = true;
-	}
-
-	return EM_TRUE;
-}
-
-static EM_BOOL kon_keyUpCallback_(int eventType, const EmscriptenKeyboardEvent *e, void *userData) {
-	(void)eventType;
-	kon_window_t *window = (kon_window_t *)userData;
-
-	window->hasKeyEvent = true;
-	window->keyEventType = KON_EVENT_KEY_UP;
-	window->keyEventKey = e->keyCode;
-
-	return EM_TRUE;
-}
-
-kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags) {
-	(void)x; (void)y; (void)flags;
-
-	if (!kon_ctx) {
-		fprintf(stderr, "kon_createWindow: error creating window, no ctx\n");
-		return NULL;
-	}
-
-	kon_window_t *window = malloc(sizeof(kon_window_t));
-	if (!window) return NULL;
-
-	strncpy(window->canvasID, "#canvas", sizeof(window->canvasID) - 1);
-	window->canvasID[sizeof(window->canvasID) - 1] = '\0';
-
-	window->shouldClose = false;
-	window->exitKey = 0;
-	window->hasKeyEvent = false;
-	window->hasResizeEvent = false;
-
-	emscripten_set_canvas_element_size(window->canvasID, width, height);
-
-	EM_ASM({
-			try { document.title = UTF8ToString($0); } catch (e) {}
-	}, title);
-
-	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, window, EM_FALSE, kon_keyDownCallback_);
-	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, window, EM_FALSE, kon_keyUpCallback_);
-
-	return window;
-}
-
-void kon_destroyWindow(kon_window_t *window) {
-	if (!window) return;
-
-	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, NULL);
-	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, NULL);
-
-	free(window);
-}
-
-bool kon_windowShouldClose(kon_window_t *window) {
-	if (!window) return true;
-	return window->shouldClose;
-}
-
-void kon_setExitKey(kon_window_t *window, int key) {
-	if (!window) return;
-	window->exitKey = key;
-}
-
-void kon_setWindowPos(kon_window_t *window, int x, int y) {
-	(void)window; (void)x; (void)y;
-}
-
-void kon_setWindowSize(kon_window_t *window, int width, int height) {
-	if (!window) return;
-	emscripten_set_canvas_element_size(window->canvasID, width, height);
-}
-
-void kon_getWindowPos(kon_window_t *window, int *x, int *y) {
-	(void)window;
-	if (x) *x = 0;
-	if (y) *y = 0;
-}
-
-void kon_getWindowSize(kon_window_t *window, int *width, int *height) {
-	if (!window || !width || !height) return;
-
-	double w, h;
-	emscripten_get_element_css_size(window->canvasID, &w, &h);
-	*width  = (int)w;
-	*height = (int)h;
-}
-
-int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
-	if (!window || !event) return 0;
-
-	event->type = KON_EVENT_NONE;
-
-	if (window->hasResizeEvent) {
-		event->type = KON_EVENT_RESIZE;
-		event->width = window->resizeWidth;
-		event->height = window->resizeHeight;
-		window->hasResizeEvent = false;
-		return 1;
-	}
-
-	if (window->hasKeyEvent) {
-		event->type = window->keyEventType;
-		event->key  = window->keyEventKey;
-		window->hasKeyEvent = false;
-		return 1;
-	}
-
-	return 0;
-}
-
-EM_JS(void, kon_jsBlit_, (const char *canvasID, uint32_t *pixels, int width, int height), {
-	var sel = UTF8ToString(canvasID);
-	var canvas = document.querySelector(sel);
-	if (!canvas) return;
-	
-	if (!canvas.__konCtx) canvas.__konCtx = canvas.getContext('2d');
-	var ctx = canvas.__konCtx;
-
-	if (!canvas.__konImgData || canvas.__konImgData.width !== width || canvas.__konImgData.height !== height) {
-		canvas.__konImgData = ctx.createImageData(width, height);
-	}
-	var imgData = canvas.__konImgData;
-
-	var dst = new Uint32Array(imgData.data.buffer);
-	var srcIdx = pixels >> 2;
-	var count = width * height;
-
-	for (var i = 0; i < count; i++) {
-		var px = HEAPU32[srcIdx + i];
-		dst[i] = (px & 0xFF00FF00) | ((px & 0x00FF0000) >>> 16) | ((px & 0x000000FF) << 16);
-	}
-
-	ctx.putImageData(imgData, 0, 0);
-});
-
-void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height) {
-	if (!window || !pixels) return;
-	kon_jsBlit_(window->canvasID, (uint32_t *)pixels, width, height);
 }
 
 #else
