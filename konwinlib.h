@@ -772,6 +772,10 @@ void kon_setExitKey(kon_window_t *window, int key) {
 	window->exitKey = key;
 }
 
+void kon_setWindowPos(kon_window_t *window, int x, int y) {
+	(void)window; (void)x; (void)y;
+}
+
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
