@@ -872,6 +872,15 @@ int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 		return 1;
 	}
 
+	if (window->hasMouseEvent) {
+		event->type = window->mouseEventType;
+		event->mouseX = window->mouseEventX;
+		event->mouseY = window->mouseEventY;
+		event->mouseButton = window->mouseEventButton;
+		window->hasMouseEvent = false;
+		return 1;
+	}
+
 	return 1;
 }
 
