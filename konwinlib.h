@@ -680,6 +680,22 @@ struct kon_window {
 	int resizeWidth, resizeHeight;
 };
 
+bool kon_init(void) {
+	kon_context_t *ctx = malloc(sizeof(kon_context_t));
+	if (!ctx) return false;
+
+	ctx->initialized = 1;
+	kon_ctx = ctx;
+	return true;
+}
+
+void kon_deinit(void) {
+	if (!kon_ctx) return;
+
+	free(kon_ctx);
+	kon_ctx = NULL;
+}
+
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
