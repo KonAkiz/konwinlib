@@ -853,6 +853,18 @@ void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
 
+/*** main loop ***/
+
+#ifdef __EMSCRIPTEN__
+
+typedef struct {
+	kon_window_t *window;
+	kon_mainLoopFn callback;
+	void *userData;
+} kon_mainLoopCtx_;
+
+#endif /* __EMSCRIPTEN__ */
+
 #endif /* end of KONWINLIB_IMPLEMENTATION */
 
 #endif
