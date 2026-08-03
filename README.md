@@ -17,6 +17,7 @@ It's very basic and simple as of now since it's still early in development.
 
 - linux
 - windows
+- web
 
 ## Usage
 
@@ -155,6 +156,9 @@ kon_setWindowPos(window, x, y);
 
 kon_setWindowSize(window, width, height);
 ```
+
+### web example
+If you wish to see an example for using these for making web games... you can check out [my web example](examples/web). You will need emcc and firefox to use my Makefile... or not if you know how to mod it properly.
 
 This thing has only been tested with a basic software renderer. [KonSofRen](https://github.com/KonAkiz/konsofren) to be exact. 
 
