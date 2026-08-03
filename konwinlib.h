@@ -60,10 +60,18 @@ typedef enum kon_eventType {
 	KON_EVENT_MOUSE_MOVE
 } kon_eventType_t;
 
+typedef enum kon_mouseButton {
+	KON_MOUSE_LEFT = 0,
+	KON_MOUSE_MIDDLE,
+	KON_MOUSE_RIGHT
+} kon_mouseButton_t;
+
 typedef struct kon_event {
 	kon_eventType_t type;
 	int width, height; /* will be used to store data for resize events */
 	int key;
+	int mouseX, mouseY;
+	kon_mouseButton_t mouseButton;
 } kon_event_t;
 
 kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags);
