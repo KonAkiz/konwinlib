@@ -753,6 +753,15 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 	return window;
 }
 
+void kon_destroyWindow(kon_window_t *window) {
+	if (!window) return;
+
+	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, NULL);
+	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, NULL);
+
+	free(window);
+}
+
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
