@@ -200,6 +200,18 @@ static EM_BOOL kon_mouseUpCallback_(int eventType, const EmscriptenMouseEvent *e
 	return EM_TRUE;
 }
 
+static EM_BOOL kon_mouseMoveCallback_(int eventType, const EmscriptenMouseEvent *e, void *userData) {
+	(void)eventType;
+	kon_window_t *window = (kon_window_t *)userData;
+
+	window->hasMouseEvent = true;
+	window->mouseEventType = KON_EVENT_MOUSE_MOVE;
+	window->mouseEventX = e->targetX;
+	window->mouseEventY = e->targetY;
+
+	return EM_TRUE;
+}
+
 kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags) {
 	(void)x; (void)y; (void)flags;
 
