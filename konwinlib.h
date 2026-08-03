@@ -711,6 +711,17 @@ static EM_BOOL kon_keyDownCallback_(int eventType, const EmscriptenKeyboardEvent
 	return EM_TRUE;
 }
 
+static EM_BOOL kon_keyUpCallback_(int eventType, const EmscriptenKeyboardEvent *e, void *userData) {
+	(void)eventType;
+	kon_window_t *window = (kon_window_t *)userData;
+
+	window->hasKeyEvent = true;
+	window->hasEventType = KON_EVENT_KEY_UP;
+	window->keyEventKey = ->keyCode;
+
+	return EM_TRUE;
+}
+
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
