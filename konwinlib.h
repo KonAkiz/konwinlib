@@ -636,6 +636,10 @@ struct kon_window {
 	kon_eventType_t keyEventType;
 	int keyEventKey;
 	int exitKey;
+	bool hasMouseEvent;
+	kon_eventType_t mouseEventType;
+	int mouseEventX, mouseEventY;
+	kon_mouseButton_t mouseEventButton;
 };
 
 LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
