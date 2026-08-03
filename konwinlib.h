@@ -79,6 +79,10 @@ void kon_getWindowSize(kon_window_t *window, int *width, int *height);
 int kon_pollEvent(kon_window_t *window, kon_event_t *event);
 void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height);
 
+// added these for web dev
+typedef void (*kon_mainLoopFn)(void *userdata);
+void kon_runMainLoop(kon_window_t *window, kon_mainLoopFn callback, void *userdata);
+
 /*** implementation ***/
 
 #ifdef KONWINLIB_IMPLEMENTATION
