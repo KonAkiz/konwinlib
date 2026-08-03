@@ -762,6 +762,11 @@ void kon_destroyWindow(kon_window_t *window) {
 	free(window);
 }
 
+bool kon_windowShouldClose(kon_window_t *window) {
+	if (!window) return true;
+	return window->shouldClose;
+}
+
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
