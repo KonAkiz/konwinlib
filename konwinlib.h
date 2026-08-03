@@ -54,7 +54,10 @@ typedef enum kon_eventType {
 	KON_EVENT_CLOSE,
 	KON_EVENT_RESIZE,
 	KON_EVENT_KEY_DOWN,
-	KON_EVENT_KEY_UP
+	KON_EVENT_KEY_UP,
+	KON_EVENT_MOUSE_DOWN,
+	KON_EVENT_MOUSE_UP,
+	KON_EVENT_MOUSE_MOVE
 } kon_eventType_t;
 
 typedef struct kon_event {
