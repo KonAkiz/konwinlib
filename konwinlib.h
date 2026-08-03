@@ -657,6 +657,12 @@ void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int
 	ReleaseDC(NULL, screenDC);
 }
 
+#elif defined(__EMSCRIPTEN__)
+
+#include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
+#include <string.h>
+
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
