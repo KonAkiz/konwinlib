@@ -722,6 +722,37 @@ static EM_BOOL kon_keyUpCallback_(int eventType, const EmscriptenKeyboardEvent *
 	return EM_TRUE;
 }
 
+kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags) {
+	(void)x; (void)y; (void)flags;
+
+	if (!kon_ctx) {
+		fprintf(stderr, "kon_createWindow: error creating window, no ctx\n");
+		return NULL;
+	}
+
+	kon_window_t *window = malloc(sizeof(kon_window_t));
+	if (!window) return NULL;
+
+	strcpy(window->canvasID, "#canvas", sizeof(window->canvasID) - 1);
+	window->canvasID[sizeof(window->canvasID) - 1] = '\0';
+
+	window->shouldClose = false;
+	window->exitKey = 0;
+	window->hasKeyEvent = false;
+	window->hasResizeEvent = false;
+
+	emscripten_set_canvas_element_size(window->canvasID, width, height);
+
+	EM_ASM({
+			try { document.title = UTF8ToString($0); } catch (e) {}
+	}, title);
+
+	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, window, EM_FALSE, kon_keyDownCallback_);
+	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, window, EM_FALSE, kon_keyUpCallback_);
+
+	return window;
+}
+
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
