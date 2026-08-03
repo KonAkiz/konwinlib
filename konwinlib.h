@@ -696,6 +696,21 @@ void kon_deinit(void) {
 	kon_ctx = NULL;
 }
 
+static EM_BOOL kon_keyDownCallback_(int eventType, const EmscriptenKeyboardEvent *e, void *userData) {
+	(void)eventType;
+	kon_window_t *window = (kon_window_t *)userData;
+
+	window->hasKeyEvent = true;
+	window->keyEventType = KON_EVENT_KEY_DOWN;
+	window->keyEventKey = e->keyCode;
+
+	if (window->exitKey != 0 && window->keyEventKey == window->exitKey) {
+		window->shouldClose = true;
+	}
+
+	return EM_TRUE;
+}
+
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
