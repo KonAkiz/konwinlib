@@ -667,6 +667,19 @@ struct kon_context {
 	int initialized;
 };
 
+struct kon_window {
+	char canvasID[64];
+	bool shouldClose;
+	int exitKey;
+
+	bool hasKeyEvent;
+	kon_eventType_t keyEventType;
+	int keyEventKey;
+
+	bool hasResizeEvent;
+	int resizeWidth, resizeHeight;
+};
+
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
