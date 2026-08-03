@@ -796,6 +796,29 @@ void kon_getWindowSize(kon_window_t *window, int *width, int *height) {
 	*height = (int)h;
 }
 
+int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
+	if (!window || !event) return 0;
+
+	event->type = KON_EVENT_NONE;
+
+	if (window->hasResizeEvent) {
+		event->type = KON_EVENT_RESIZE;
+		event->width = window->resizeWidth;
+		event->height = window->resizeHeight;
+		window->hasResizeEvent = false;
+		return 1;
+	}
+
+	if (window->hasKeyEvent) {
+		event->type = window->keyEventType;
+		event->key  = window->keyEventKey;
+		window->hasKeyEvent = false;
+		return 1;
+	}
+
+	return 0;
+}
+
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
