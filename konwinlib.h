@@ -668,6 +668,28 @@ LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 			window->keyEventKey = (int)wParam;
 		}
 		break;
+	case WM_LBUTTONDOWN: case WM_LBUTTONUP:
+	case WM_RBUTTONDOWN: case WM_RBUTTONUP:
+	case WM_MBUTTONDOWN: case WM_MBUTTONUP:
+		if (window) {
+			window->hasMouseEvent = true;
+			window->mouseEventType = (msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN)
+				? KON_EVENT_MOUSE_DOWN : KON_EVENT_MOUSE_UP;
+			window->mouseEventButton = (msg == WM_LBUTTONDOWN || msg == WM_LBUTTONUP) ? KON_MOUSE_LEFT
+				: (msg == WM_RBUTTONDOWN || msg == WM_RBUTTONUP) ? KON_MOUSE_RIGHT
+				: KON_MOUSE_MIDDLE;
+			window->mouseEventX = (int)(short)LOWORD(lParam);
+			window->mouseEventY = (int)(short)HIWORD(lParam);
+		}
+		break;
+	case WM_MOUSEMOVE:
+		if (window) {
+			window->hasMouseEvent = true;
+			window->mouseEventType = KON_EVENT_MOUSE_MOVE;
+			window->mouseEventX = (int)(short)LOWORD(lParam);
+			window->mouseEventY = (int)(short)HIWORD(lParam);
+		}
+		break;
 	case WM_CLOSE:
 		if (window) window->shouldClose = true;
 		break;
