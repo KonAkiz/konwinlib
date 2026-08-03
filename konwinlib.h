@@ -230,6 +230,7 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 	window->exitKey = 0;
 	window->hasKeyEvent = false;
 	window->hasResizeEvent = false;
+	window->hasMouseEvent = false;
 
 	emscripten_set_canvas_element_size(window->canvasID, width, height);
 
@@ -239,6 +240,9 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 
 	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, window, EM_FALSE, kon_keyDownCallback_);
 	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, window, EM_FALSE, kon_keyUpCallback_);
+	emscripten_set_mousedown_callback(window->canvasID, window, EM_FALSE, kon_mouseDownCallback_);
+	emscripten_set_mouseup_callback(window->canvasID, window, EM_FALSE, kon_mouseUpCallback_);
+	emscripten_set_mousemove_callback(window->canvasID, window, EM_FALSE, kon_mouseMoveCallback_);
 
 	return window;
 }
