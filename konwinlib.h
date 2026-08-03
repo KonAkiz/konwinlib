@@ -819,6 +819,36 @@ int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 	return 0;
 }
 
+EM_JS(void, kon_jsBlit_, (const char *canvasID, uint32_t *pixels, int width, int height), {
+	var sel = UTF8ToString(canvasID);
+	var canvas = document.querySelector(sel);
+	if (!canvas) return;
+	
+	if (!canvas.__konCtx) canvas.__konCtx = canvas.getContext('2d');
+	var ctx = canvas.__konCtx;
+
+	if (!canvas.__konImgData || canvas.__konImgData.width !== width || canvas.__konImgData.height !== height) {
+		canvas.__konImgData = ctx.createImageData(width, height);
+	}
+	var imgData = canvas.__konImgData;
+
+	var dst = new Uint32Array(imgData.data.buffer);
+	var srcIdx = pixels >> 2;
+	var count = width * height;
+
+	for (var i = 0; i < count; i++) {
+		var px = HEAPU32[srcIdx + i];
+		dst[i] = (px & 0xFF00FF00) | ((px & 0x00FF0000) >>> 16) | ((px & 0x000000FF) << 16);
+	}
+
+	ctx.putImageData(imgData, 0, 0);
+});
+
+void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height) {
+	if (!window || !pixels) return;
+	kon_jsBlit_(window->canvasID, (uint32_t *)pixels, width, height);
+}
+
 #else
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
