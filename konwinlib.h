@@ -170,6 +170,36 @@ static EM_BOOL kon_keyUpCallback_(int eventType, const EmscriptenKeyboardEvent *
 	return EM_TRUE;
 }
 
+static EM_BOOL kon_mouseDownCallback_(int eventType, const EmscriptenMouseEvent *e, void *userData) {
+	(void)eventType;
+	kon_window_t *window = (kon_window_t *)userData;
+
+	if (e->button > KON_MOUSE_RIGHT) return EM_FALSE;
+
+	window->hasMouseEvent = true;
+	window->mouseEventType = KON_EVENT_MOUSE_DOWN;
+	window->mouseEventButton = (kon_windowButton_t)e->button;
+	window->mouseEventX = e->targetX;
+	window->mouseEventY = e->targetY;
+
+	return EM_TRUE;
+}
+
+static EM_BOOL kon_mouseUpCallback_(int eventType, const EmscriptenMouseEvent *e, void *userData) {
+	(void)eventType;
+	kon_window_t *window = (kon_window_t *)userData;
+
+	if (e->button > KON_MOUSE_RIGHT) return EM_FALSE:
+
+	window->hasMouseEvent = true;
+	window->mouseEventType = KON_EVENT_MOUSE_UP;
+	window->mouseEventButton = (kon_windowButton_t)e->button;
+	window->mouseEventX = e->targetX;
+	window->mouseEventY = e->targetY;
+
+	return EM_TRUE;
+}
+
 kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags) {
 	(void)x; (void)y; (void)flags;
 
