@@ -577,7 +577,7 @@ int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 		}
 
 		if (konButton != -1) {
-			event->type (xev.type == ButtonPress) ? KON_EVENT_MOUSE_DOWN : KON_EVENT_MOUSE_UP;
+			event->type = (xev.type == ButtonPress) ? KON_EVENT_MOUSE_DOWN : KON_EVENT_MOUSE_UP;
 			event->mouseButton = (kon_mouseButton_t)konButton;
 			event->mouseX = xev.xbutton.x;
 			event->mouseY = xev.xbutton.y;
