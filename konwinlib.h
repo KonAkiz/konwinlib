@@ -252,6 +252,9 @@ void kon_destroyWindow(kon_window_t *window) {
 
 	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, NULL);
 	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, NULL);
+	emscripten_set_mousedown_callback(window->canvasID, NULL, EM_FALSE, NULL);
+	emscripten_set_mouseup_callback(window->canvasID, NULL, EM_FALSE, NULL);
+	emscripten_set_mousemove_callback(window->canvasID, NULL, EM_FALSE, NULL);
 
 	free(window);
 }
