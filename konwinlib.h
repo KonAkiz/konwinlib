@@ -560,6 +560,38 @@ int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 		return 1;
 	}
 
+	if (xev.type == ButtonPress || xev.type == ButtonRelease) {
+		int konButton = -1;
+		switch (xev.xbutton.button) {
+		case Button1:
+			konButton = KON_MOUSE_LEFT;
+			break;
+		case Button2:
+			konButton = KON_MOUSE_MIDDLE;
+			break;
+		case Button3:
+			konButton = KON_MOUSE_RIGHT;
+			break;
+		default:
+			break;
+		}
+
+		if (konButton != -1) {
+			event->type (xev.type == ButtonPress) ? KON_EVENT_MOUSE_DOWN : KON_EVENT_MOUSE_UP;
+			event->mouseButton = (kon_mouseButton_t)konButton;
+			event->mouseX = xev.xbutton.x;
+			event->mouseY = xev.xbutton.y;
+		}
+		return 1;
+	}
+
+	if (xev.type == MotionNotify) {
+		event->type = KON_EVENT_MOUSE_MOVE;
+		event->mouseX = xev.xmotion.x;
+		event->mouseY = xev.xmotion.y;
+		return 1;
+	}
+
 	return 1;
 }
 
