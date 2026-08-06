@@ -37,4 +37,18 @@ typedef struct kon_input {
 	int mouseX, mouseY;
 } kon_input_t;
 
+void kon_inputBeginFrame(kon_input_t *input);
+
+void kon_inputFeedEvent(kon_input_t *input, const kon_event_t *event);
+
+bool kon_isKeyDown(const kon_input_t *input, kon_key_t key);
+bool kon_isKeyPressed(const kon_input_t *input, kon_key_t key);
+bool kon_isKeyReleased(const kon_input_t *input, kon_key_t key);
+
+bool kon_isMouseDown(const kon_input_t *input, kon_mouseButton_t button);
+bool kon_isMousePressed(const kon_input_t *input, kon_mouseButton_t button);
+bool kon_isMouseReleased(const kon_input_t *input, kon_mouseButton_t button);
+
+void kon_getMousePos(const kon_input_t *input, int *x, int *y);
+
 #endif /* KONINPUT_H */
