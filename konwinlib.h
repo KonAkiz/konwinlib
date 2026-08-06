@@ -392,7 +392,96 @@ void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/Xrandr.h>
+#include <X11/keysym.h>
 #include <string.h>
+
+static kon_key_t kon_translateX11Key_(KeySym sym) {
+	switch (sym) {
+	case XK_a: return KON_KEY_A;
+	case XK_b: return KON_KEY_B;
+	case XK_c: return KON_KEY_C;
+	case XK_d: return KON_KEY_D;
+	case XK_e: return KON_KEY_E;
+	case XK_f: return KON_KEY_F;
+	case XK_g: return KON_KEY_G;
+	case XK_h: return KON_KEY_H;
+	case XK_i: return KON_KEY_I;
+	case XK_j: return KON_KEY_J;
+	case XK_k: return KON_KEY_K;
+	case XK_l: return KON_KEY_L;
+	case XK_m: return KON_KEY_M;
+	case XK_n: return KON_KEY_N;
+	case XK_o: return KON_KEY_O;
+	case XK_p: return KON_KEY_P;
+	case XK_q: return KON_KEY_Q;
+	case XK_r: return KON_KEY_R;
+	case XK_s: return KON_KEY_S;
+	case XK_t: return KON_KEY_T;
+	case XK_u: return KON_KEY_U;
+	case XK_v: return KON_KEY_V;
+	case XK_w: return KON_KEY_W;
+	case XK_x: return KON_KEY_X;
+	case XK_y: return KON_KEY_Y;
+	case XK_z: return KON_KEY_Z;
+
+	case XK_0: return KON_KEY_0;
+	case XK_1: return KON_KEY_1;
+	case XK_2: return KON_KEY_2;
+	case XK_3: return KON_KEY_3;
+	case XK_4: return KON_KEY_4;
+	case XK_5: return KON_KEY_5;
+	case XK_6: return KON_KEY_6;
+	case XK_7: return KON_KEY_7;
+	case XK_8: return KON_KEY_8;
+	case XK_9: return KON_KEY_9;
+
+	case XK_F1: return KON_KEY_F1;
+	case XK_F2: return KON_KEY_F2;
+	case XK_F3: return KON_KEY_F3;
+	case XK_F4: return KON_KEY_F4;
+	case XK_F5: return KON_KEY_F5;
+	case XK_F6: return KON_KEY_F6;
+	case XK_F7: return KON_KEY_F7;
+	case XK_F8: return KON_KEY_F8;
+	case XK_F9: return KON_KEY_F9;
+	case XK_F10: return KON_KEY_F10;
+	case XK_F11: return KON_KEY_F11;
+	case XK_F12: return KON_KEY_F12;
+
+	case XK_Left: return KON_KEY_LEFT;
+	case XK_Right: return KON_KEY_RIGHT;
+	case XK_Up: return KON_KEY_UP;
+	case XK_Down: return KON_KEY_DOWN;
+
+	case XK_space: return KON_KEY_SPACE;
+	case XK_Return: return KON_KEY_ENTER;
+	case XK_Tab: return KON_KEY_TAB;
+	case XK_BackSpace: return KON_KEY_BACKSPACE;
+	case XK_Escape: return KON_KEY_ESCAPE;
+	case XK_Delete: return KON_KEY_DELETE;
+
+	case XK_Shift_L: return KON_KEY_LEFT_SHIFT;
+	case XK_Shift_R: return KON_KEY_RIGHT_SHIFT;
+	case XK_Control_L: return KON_KEY_LEFT_CTRL;
+	case XK_Control_R: return KON_KEY_RIGHT_CTRL;
+	case XK_Alt_L: return KON_KEY_LEFT_ALT;
+	case XK_Alt_R: return KON_KEY_RIGHT_ALT;
+
+	case XK_minus: return KON_KEY_MINUS;
+	case XK_equal: return KON_KEY_EQUAL;
+	case XK_bracketleft: return KON_KEY_LEFT_BRACKET;
+	case XK_bracketright: return KON_KEY_RIGHT_BRACKET;
+	case XK_semicolon: return KON_KEY_SEMICOLON;
+	case XK_apostrophe: return KON_KEY_APOSTROPHE;
+	case XK_comma: return KON_KEY_COMMA;
+	case XK_period: return KON_KEY_PERIOD;
+	case XK_slash: return KON_KEY_SLASH;
+	case XK_backslash: return KON_KEY_BACKSLASH;
+	case XK_grave: return KON_KEY_GRAVE;
+
+	default: return KON_KEY_UNKNOWN;
+	}
+}
 
 struct kon_context {
 	Display *display;
