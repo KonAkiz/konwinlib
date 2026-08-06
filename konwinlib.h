@@ -265,7 +265,7 @@ static EM_BOOL kon_keyDownCallback_(int eventType, const EmscriptenKeyboardEvent
 
 	window->hasKeyEvent = true;
 	window->keyEventType = KON_EVENT_KEY_DOWN;
-	window->keyEventKey = e->keyCode;
+	window->keyEventKey = kon_translateEmKey_(e->keyCode);
 
 	if (window->exitKey != 0 && window->keyEventKey == window->exitKey) {
 		window->shouldClose = true;
@@ -280,7 +280,7 @@ static EM_BOOL kon_keyUpCallback_(int eventType, const EmscriptenKeyboardEvent *
 
 	window->hasKeyEvent = true;
 	window->keyEventType = KON_EVENT_KEY_UP;
-	window->keyEventKey = e->keyCode;
+	window->keyEventKey = kon_translateEmKey_(e->keyCode);
 
 	return EM_TRUE;
 }
