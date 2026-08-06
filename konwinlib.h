@@ -931,7 +931,7 @@ LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 		if (window) {
 			window->hasKeyEvent = true;
 			window->keyEventType = KON_EVENT_KEY_DOWN;
-			window->keyEventKey = (int)kon_translateWin32Key_(wParam);
+			window->keyEventKey = (int)kon_translateWin32Key_(wParam, lParam);
 			if (window->exitKey != 0 && window->keyEventKey == window->exitKey) {
 				window->shouldClose = true;
 			}
@@ -941,7 +941,7 @@ LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 		if (window) {
 			window->hasKeyEvent = true;
 			window->keyEventType = KON_EVENT_KEY_UP;
-			window->keyEventKey = (int)kon_translateWin32Key_(wParam);
+			window->keyEventKey = (int)kon_translateWin32Key_(wParam, lParam);
 		}
 		break;
 	case WM_LBUTTONDOWN: case WM_LBUTTONUP:
