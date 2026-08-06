@@ -1217,6 +1217,91 @@ typedef struct {
 	void *userData;
 } kon_mainLoopCtx_;
 
+static kon_key_t kon_translateEmKey_(int keyCode) {
+	switch (keyCode) {
+	case 65: return KON_KEY_A;
+	case 66: return KON_KEY_B;
+	case 67: return KON_KEY_C;
+	case 68: return KON_KEY_D;
+	case 69: return KON_KEY_E;
+	case 70: return KON_KEY_F;
+	case 71: return KON_KEY_G;
+	case 72: return KON_KEY_H;
+	case 73: return KON_KEY_I;
+	case 74: return KON_KEY_J;
+	case 75: return KON_KEY_K;
+	case 76: return KON_KEY_L;
+	case 77: return KON_KEY_M;
+	case 78: return KON_KEY_N;
+	case 79: return KON_KEY_O;
+	case 80: return KON_KEY_P;
+	case 81: return KON_KEY_Q;
+	case 82: return KON_KEY_R;
+	case 83: return KON_KEY_S;
+	case 84: return KON_KEY_T;
+	case 85: return KON_KEY_U;
+	case 86: return KON_KEY_V;
+	case 87: return KON_KEY_W;
+	case 88: return KON_KEY_X;
+	case 89: return KON_KEY_Y;
+	case 90: return KON_KEY_Z;
+
+	case 48: return KON_KEY_0;
+	case 49: return KON_KEY_1;
+	case 50: return KON_KEY_2;
+	case 51: return KON_KEY_3;
+	case 52: return KON_KEY_4;
+	case 53: return KON_KEY_5;
+	case 54: return KON_KEY_6;
+	case 55: return KON_KEY_7;
+	case 56: return KON_KEY_8;
+	case 57: return KON_KEY_9;
+
+	case 112: return KON_KEY_F1;
+	case 113: return KON_KEY_F2;
+	case 114: return KON_KEY_F3;
+	case 115: return KON_KEY_F4;
+	case 116: return KON_KEY_F5;
+	case 117: return KON_KEY_F6;
+	case 118: return KON_KEY_F7;
+	case 119: return KON_KEY_F8;
+	case 120: return KON_KEY_F9;
+	case 121: return KON_KEY_F10;
+	case 122: return KON_KEY_F11;
+	case 123: return KON_KEY_F12;
+
+	case 37: return KON_KEY_LEFT;
+	case 39: return KON_KEY_RIGHT;
+	case 38: return KON_KEY_UP;
+	case 40: return KON_KEY_DOWN;
+
+	case 32: return KON_KEY_SPACE;
+	case 13: return KON_KEY_ENTER;
+	case 9:  return KON_KEY_TAB;
+	case 8:  return KON_KEY_BACKSPACE;
+	case 27: return KON_KEY_ESCAPE;
+	case 46: return KON_KEY_DELETE;
+
+	case 16: return KON_KEY_LEFT_SHIFT;
+	case 17: return KON_KEY_LEFT_CTRL;
+	case 18: return KON_KEY_LEFT_ALT;
+
+	case 189: return KON_KEY_MINUS;
+	case 187: return KON_KEY_EQUAL;
+	case 219: return KON_KEY_LEFT_BRACKET;
+	case 221: return KON_KEY_RIGHT_BRACKET;
+	case 186: return KON_KEY_SEMICOLON;
+	case 222: return KON_KEY_APOSTROPHE;
+	case 188: return KON_KEY_COMMA;
+	case 190: return KON_KEY_PERIOD;
+	case 191: return KON_KEY_SLASH;
+	case 220: return KON_KEY_BACKSLASH;
+	case 192: return KON_KEY_GRAVE;
+
+	default: return KON_KEY_UNKNOWN;
+	}
+}
+
 static void kon_mainLoopTrampoline_(void *arg) {
 	kon_mainLoopCtx_ *ctx = (kon_mainLoopCtx_ *)arg;
 
