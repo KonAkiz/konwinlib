@@ -825,6 +825,94 @@ struct kon_window {
 	kon_mouseButton_t mouseEventButton;
 };
 
+static kon_key_t kon_translateWin32Key_(WPARAM vk) {
+	switch (vk) {
+	case 'A': return KON_KEY_A;
+	case 'B': return KON_KEY_B;
+	case 'C': return KON_KEY_C;
+	case 'D': return KON_KEY_D;
+	case 'E': return KON_KEY_E;
+	case 'F': return KON_KEY_F;
+	case 'G': return KON_KEY_G;
+	case 'H': return KON_KEY_H;
+	case 'I': return KON_KEY_I;
+	case 'J': return KON_KEY_J;
+	case 'K': return KON_KEY_K;
+	case 'L': return KON_KEY_L;
+	case 'M': return KON_KEY_M;
+	case 'N': return KON_KEY_N;
+	case 'O': return KON_KEY_O;
+	case 'P': return KON_KEY_P;
+	case 'Q': return KON_KEY_Q;
+	case 'R': return KON_KEY_R;
+	case 'S': return KON_KEY_S;
+	case 'T': return KON_KEY_T;
+	case 'U': return KON_KEY_U;
+	case 'V': return KON_KEY_V;
+	case 'W': return KON_KEY_W;
+	case 'X': return KON_KEY_X;
+	case 'Y': return KON_KEY_Y;
+	case 'Z': return KON_KEY_Z;
+
+	case '0': return KON_KEY_0;
+	case '1': return KON_KEY_1;
+	case '2': return KON_KEY_2;
+	case '3': return KON_KEY_3;
+	case '4': return KON_KEY_4;
+	case '5': return KON_KEY_5;
+	case '6': return KON_KEY_6;
+	case '7': return KON_KEY_7;
+	case '8': return KON_KEY_8;
+	case '9': return KON_KEY_9;
+
+	case VK_F1:  return KON_KEY_F1;
+	case VK_F2:  return KON_KEY_F2;
+	case VK_F3:  return KON_KEY_F3;
+	case VK_F4:  return KON_KEY_F4;
+	case VK_F5:  return KON_KEY_F5;
+	case VK_F6:  return KON_KEY_F6;
+	case VK_F7:  return KON_KEY_F7;
+	case VK_F8:  return KON_KEY_F8;
+	case VK_F9:  return KON_KEY_F9;
+	case VK_F10: return KON_KEY_F10;
+	case VK_F11: return KON_KEY_F11;
+	case VK_F12: return KON_KEY_F12;
+
+	case VK_LEFT: return KON_KEY_LEFT;
+	case VK_RIGHT: return KON_KEY_RIGHT;
+	case VK_UP: return KON_KEY_UP;
+	case VK_DOWN: return KON_KEY_DOWN;
+
+	case VK_SPACE: return KON_KEY_SPACE;
+	case VK_RETURN: return KON_KEY_ENTER;
+	case VK_TAB: return KON_KEY_TAB;
+	case VK_BACK: return KON_KEY_BACK;
+	case VK_ESCAPE: return KON_KEY_ESCAPE;
+	case VK_DELETE: return KON_KEY_DELETE;
+
+	case VK_LSHIFT: return KON_KEY_LEFT_SHIFT;
+	case VK_RSHIFT: return KON_KEY_RIGHT_SHIFT;
+	case VK_LCONTROL: return KON_KEY_LEFT_CTRL;
+	case VK_RCONTROL: return KON_KEY_RIGHT_CTRL;
+	case VK_LMENU: return KON_KEY_LEFT_ALT;
+	case VK_RMENU: return KON_KEY_RIGHT_ALT;
+
+	case VK_OEM_MINUS: return KON_KEY_MINUS;
+	case VK_OEM_PLUS: return KON_KEY_EQUAL;
+	case VK_OEM_4: return KON_KEY_LEFT_BRACKET;
+	case VK_OEM_6: return KON_KEY_RIGHT_BRACKET;
+	case VK_OEM_1: return KON_KEY_SEMICOLON;
+	case VK_OEM_7: return KON_KEY_APOSTROPHE;
+	case VK_OEM_COMMA: return KON_KEY_COMMA;
+	case VK_OEM_PERIOD: return KON_KEY_PERIOD;
+	case VK_OEM_2: return KON_KEY_SLASH;
+	case VK_OEM_5: return KON_KEY_BACKSLASH;
+	case VK_OEM_3: return KON_KEY_GRAVE;
+
+	default: return KON_KEY_UNKNOWN;
+	}
+}
+
 LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	kon_window_t *window = (kon_window_t *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
