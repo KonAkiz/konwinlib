@@ -730,7 +730,7 @@ int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 
 	if (xev.type == KeyPress) {
 		event->type = KON_EVENT_KEY_DOWN;
-		event->key = (int)XLookupKeysym(&xev.xkey, 0);
+		event->key = (int)kon_translateX11Key_(XLookupKeysym(&xev.xkey, 0));
 		if (window->exitKey != 0 && event->key == window->exitKey) {
 			window->shouldClose = true;
 		}
@@ -739,7 +739,7 @@ int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 
 	if (xev.type == KeyRelease) {
 		event->type = KON_EVENT_KEY_UP;
-		event->key = (int)XLookupKeysym(&xev.xkey, 0);
+		event->key = (int)kon_translateX11Key_(XLookupKeysym(&xev.xkey, 0));
 		return 1;
 	}
 
