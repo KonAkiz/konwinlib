@@ -825,7 +825,19 @@ struct kon_window {
 	kon_mouseButton_t mouseEventButton;
 };
 
-static kon_key_t kon_translateWin32Key_(WPARAM vk) {
+static kon_key_t kon_translateWin32Key_(WPARAM vk, LPARAM lParam) {
+	if (vk == VK_SHIFT) {
+		UINT scancode = (lParam >> 16) &  0xFF;
+		UINT lshift = MapVirtualKey(VK_LSHIFT, MAPVK_VK_TO_VSC);
+		return (scancode == lshift) ? KON_KEY_LEFT_SHIFT : KON_KEY_RIGHT_SHIFT;
+	}
+	if (vk == VK_CONTROL) {
+		return (lParam & 0x01000000) ? KON_KEY_RIGHT_CTRL : KON_KEY_LEFT_CTRL;
+	}
+	if (vk == VK_MENU) {
+		return (lParam & 0x01000000) ? KON_KEY_RIGHT_ALT : KON_KEY_LEFT_ALT;
+	}
+
 	switch (vk) {
 	case 'A': return KON_KEY_A;
 	case 'B': return KON_KEY_B;
