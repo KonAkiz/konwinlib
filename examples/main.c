@@ -31,7 +31,7 @@ int main(void) {
 		kon_deinit();
 		return 1;
 	}
-	kon_setExitKey(win, 'q');
+	kon_setExitKey(win, KON_KEY_Q);
 
 	kon_framebuffer_t *fb = kon_createFramebuffer(WINDOW_WIDTH, WINDOW_HEIGHT);
 	if (!fb) {

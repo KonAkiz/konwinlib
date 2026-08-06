@@ -28,7 +28,7 @@ int main(void) {
 		return EXIT_FAILURE;
 	}
 
-	kon_setExitKey(window, 'q');
+	kon_setExitKey(window, KON_KEY_Q);
 
 	kon_event_t event;
 	while (!kon_windowShouldClose(window)) {
