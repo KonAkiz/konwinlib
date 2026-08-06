@@ -898,16 +898,9 @@ static kon_key_t kon_translateWin32Key_(WPARAM vk, LPARAM lParam) {
 	case VK_SPACE: return KON_KEY_SPACE;
 	case VK_RETURN: return KON_KEY_ENTER;
 	case VK_TAB: return KON_KEY_TAB;
-	case VK_BACK: return KON_KEY_BACK;
+	case VK_BACK: return KON_KEY_BACKSPACE;
 	case VK_ESCAPE: return KON_KEY_ESCAPE;
 	case VK_DELETE: return KON_KEY_DELETE;
-
-	case VK_LSHIFT: return KON_KEY_LEFT_SHIFT;
-	case VK_RSHIFT: return KON_KEY_RIGHT_SHIFT;
-	case VK_LCONTROL: return KON_KEY_LEFT_CTRL;
-	case VK_RCONTROL: return KON_KEY_RIGHT_CTRL;
-	case VK_LMENU: return KON_KEY_LEFT_ALT;
-	case VK_RMENU: return KON_KEY_RIGHT_ALT;
 
 	case VK_OEM_MINUS: return KON_KEY_MINUS;
 	case VK_OEM_PLUS: return KON_KEY_EQUAL;
