@@ -51,4 +51,21 @@ bool kon_isMouseReleased(const kon_input_t *input, kon_mouseButton_t button);
 
 void kon_getMousePos(const kon_input_t *input, int *x, int *y);
 
+/*** implementation ***/
+
+#ifdef KONINPUT_IMPLEMENTATION
+
+void kon_inputBeginFrame(kon_input_t *input) {
+	if (!input) return;
+
+	for (int i = 0; i < KON_KEY_COUNT; i++) {
+		input->downPrev[i] = input->down[i];
+	}
+	for (int i = 0; i < 3; i++) {
+		input->mouseDownPrev[i] = input->mouseDown[i];
+	}
+}
+
+#endif /* KONINPUT_IMPLEMENTATION */
+
 #endif /* KONINPUT_H */
