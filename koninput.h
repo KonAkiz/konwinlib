@@ -99,6 +99,21 @@ void kon_inputFeedEvent(kon_input_t *input, const kon_event_t *event) {
 	}
 }
 
+bool kon_isKeyDown(const kon_input_t *input, kon_key_t key) {
+	if (!input || key < 0 || key >= KON_KEY_COUNT) return false;
+	return input->down[key];
+}
+
+bool kon_isKeyPressed(const kon_input_t *input, kon_key_t key) {
+	if (!input || key < 0 || key >= KON_KEY_COUNT) return false;
+	return input->down[key] && !input->downPrev[key];
+}
+
+bool kon_isKeyReleased(const kon_input_t *input, kon_key_t key) {
+	if (!input || key < 0 || key >= KON_KEY_COUNT) return false;
+	return !input->down[key] && input->downPrev[key];
+}
+
 #endif /* KONINPUT_IMPLEMENTATION */
 
 #endif /* KONINPUT_H */
