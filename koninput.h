@@ -66,6 +66,23 @@ void kon_inputBeginFrame(kon_input_t *input) {
 	}
 }
 
+void kon_inputFeedEvent(kon_input_t *input, const kon_event_t *event) {
+	if (!input || !event) return;
+
+	switch (event->type) {
+	case KON_EVENT_KEY_DOWN:
+		if (event->key >= 0 && event->key < KON_KEY_COUNT)
+			input->down[event->key] = true;
+		break;
+	case KON_EVENT_KEY_UP:
+		if (event->key >= 0 && event->key < KON_KEY_COUNT)
+			input->down[event->key] = false;
+		break;
+	default:
+		break;
+	}
+}
+
 #endif /* KONINPUT_IMPLEMENTATION */
 
 #endif /* KONINPUT_H */
