@@ -114,6 +114,27 @@ bool kon_isKeyReleased(const kon_input_t *input, kon_key_t key) {
 	return !input->down[key] && input->downPrev[key];
 }
 
+bool kon_isMouseDown(const kon_input_t *input, kon_mouseButton_t button) {
+	if (!input || button < 0 || button >= 3) return false;
+	return input->mouseDown[button];
+}
+
+bool kon_isMousePressed(const kon_input_t *input, kon_mouseButton_t button) {
+	if (!input || button < 0 || button >= 3) return false;
+	return input->mouseDown[button] && !input->mouseDownPrev[button];
+}
+
+bool kon_isMouseReleased(const kon_input_t *input, kon_mouseButton_t button) {
+	if (!input || button < 0 || button >= 3) return false;
+	return !input->mouseDown[button] && input->mouseDownPrev[button];
+}
+
+void kon_getMousePos(const kon_input_t *input, int *x, int *y) {
+	if (!input) return;
+	if (x) *x = input->mouseX;
+	if (y) *y = input->mouseY;
+}
+
 #endif /* KONINPUT_IMPLEMENTATION */
 
 #endif /* KONINPUT_H */
