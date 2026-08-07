@@ -78,6 +78,22 @@ void kon_inputFeedEvent(kon_input_t *input, const kon_event_t *event) {
 		if (event->key >= 0 && event->key < KON_KEY_COUNT)
 			input->down[event->key] = false;
 		break;
+	case KON_EVENT_MOUSE_DOWN:
+		if (event->mouseButton >= 0 && event->mouseButton < 3)
+			input->mouseDown[event->mouseButton] = true;
+		input->mouseX = event->mouseX;
+		input->mouseY = event->mouseY;
+		break;
+	case KON_EVENT_MOUSE_UP:
+		if (event->mouseButton >= 0 && event->mouseButton < 3)
+			input->mouseDown[event->mouseButton] = false;
+		input->mouseX = event->mouseX;
+		input->mouseY = event->mouseY;
+		break;
+	case KON_EVENT_MOUSE_MOVE:
+		input->mouseX = event->mouseX;
+		input->mouseY = event->mouseY;
+		break;
 	default:
 		break;
 	}
