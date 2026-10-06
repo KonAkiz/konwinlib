@@ -1103,7 +1103,7 @@ void kon_deinit(void) {
 kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags) {
 	if (!kon_ctx) return NULL;
 
-	kon_window_t *window = malloc(sizeof(kon_window_t));
+	kon_window_t *window = calloc(sizeof(kon_window_t));
 	if (!window) return NULL;
 
 	window->shouldClose = false;
@@ -1125,6 +1125,11 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 	if (flags & KON_WINDOW_ALWAYS_ONTOP) exStyle |= WS_EX_TOPMOST;
 	if (flags & KON_WINDOW_TRANSPARENT)  exStyle |= WS_EX_LAYERED;
 
+	RECT adj = { 0, 0, width, height };
+	AdjustWindowRectEx(&adj, style, FALSE, exStyle);
+	int winW = adj.right - adj.left;
+	int winH = adj.bottom - adj.top;
+
 	if (flags & KON_WINDOW_CENTER) {
 		POINT cursor;
 		GetCursorPos(&cursor);
@@ -1144,7 +1149,7 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 		y = mon_y + (mon_height - height) / 2;
 	}
 
-	window->hwnd = CreateWindowEx(exStyle, "KonWinLibClass", title, style, x, y, width, height, NULL, NULL, kon_ctx->hInstance, window);
+	window->hwnd = CreateWindowEx(exStyle, "KonWinLibClass", title, style, x, y, winW, winH, NULL, NULL, kon_ctx->hInstance, window);
 
 	if (!window->hwnd) {
 		free(window);
@@ -1182,7 +1187,9 @@ void kon_setWindowPos(kon_window_t *window, int x, int y) {
 void kon_setWindowSize(kon_window_t *window, int width, int height) {
 	if (!window || !kon_ctx) return;
 
-	SetWindowPos(window->hwnd, NULL, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
+	RECT r = { 0, 0, width, height };
+	AdjustWindowRectEx(&r, (DWORD)GetWindowLongPtr(window->hwnd, GWL_STYLE), FALSE, (DWORD)GetWindowLongPtr(window->hwnd, GWL_EXSTYLE));
+	SetWindowPos(window->hwnd, NULL, 0, 0, r.right - r.left, r.bottom - r.top, SWP_NOMOVE | SWP_NOZORDER);
 }
 
 
