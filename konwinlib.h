@@ -1063,6 +1063,9 @@ LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
+		break;
+	case WM_ERASEBKGND:
+		return 1;
 	}
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
