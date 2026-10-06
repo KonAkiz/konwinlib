@@ -131,6 +131,36 @@ void kon_runMainLoop(kon_window_t *window, kon_mainLoopFn callback, void *userDa
 
 static kon_context_t *kon_ctx;
 
+#define KON_EVENT_QUEUE_SIZE 256
+
+typedef struct kon_eventQueue {
+	kon_event_t events[KON_EVENT_QUEUE_SIZE];
+	int head, count;
+} kon_eventQueue_t;
+
+static void kon_pushEvent_(kon_eventQueue_t *q, const kon_event_t *event) {
+	/* only the newest mouse move or resize matters, so overwrite instead of piling up */
+	if (q->count > 0 && (event->type == KON_EVENT_MOUSE_MOVE || event->type == KON_EVENT_RESIZE)) {
+		kon_event_t *last = &q->events[(q->head + q->count - 1) % KON_EVENT_QUEUE_SIZE];
+		if (last->type == event->type) {
+			*last = *event;
+			return;
+		}
+	}
+
+	if (q->count == KON_EVENT_QUEUE_SIZE) return;
+	q->events[(q->head + q->count) % KON_EVENT_QUEUE_SIZE] = *event;
+	q->count++;
+}
+
+static bool kon_popEvent_(kon_eventQueue_t *q, kon_event_t *event) {
+	if (q->count == 0) return false;
+	*event = q->events[q->head];
+	q->head = (q->head + 1) % KON_EVENT_QUEUE_SIZE;
+	q->count--;
+	return true;
+}
+
 #ifdef __EMSCRIPTEN__
 
 #include <emscripten/emscripten.h>
@@ -888,6 +918,7 @@ void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int
 #elif defined(_WIN32)
 
 #include <windows.h>
+#include <string.h>
 
 struct kon_context {
 	HINSTANCE hInstance;
@@ -896,17 +927,9 @@ struct kon_context {
 struct kon_window {
 	HWND hwnd;
 	bool shouldClose;
-	bool hasResizeEvent;
-	int resizeWidth, resizeHeight;
 	bool isTransparent;
-	bool hasKeyEvent;
-	kon_eventType_t keyEventType;
-	int keyEventKey;
 	int exitKey;
-	bool hasMouseEvent;
-	kon_eventType_t mouseEventType;
-	int mouseEventX, mouseEventY;
-	kon_mouseButton_t mouseEventButton;
+	kon_eventQueue_t queue;
 };
 
 static kon_key_t kon_translateWin32Key_(WPARAM vk, LPARAM lParam) {
@@ -1013,51 +1036,65 @@ LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 	}
 	case WM_KEYDOWN:
 		if (window) {
-			window->hasKeyEvent = true;
-			window->keyEventType = KON_EVENT_KEY_DOWN;
-			window->keyEventKey = (int)kon_translateWin32Key_(wParam, lParam);
-			if (window->exitKey != 0 && window->keyEventKey == window->exitKey) {
+			kon_event_t ev = {0};
+			ev.type = KON_EVENT_KEY_DOWN;
+			ev.key = (int)kon_translateWin32Key_(wParam, lParam);
+			kon_pushEvent_(&window->queue, &ev);
+			if (window->exitKey != 0 && ev.key == window->exitKey) {
 				window->shouldClose = true;
+				ev.type = KON_EVENT_CLOSE;
+				kon_pushEvent_(&window->queue, &ev);
 			}
 		}
 		break;
 	case WM_KEYUP:
 		if (window) {
-			window->hasKeyEvent = true;
-			window->keyEventType = KON_EVENT_KEY_UP;
-			window->keyEventKey = (int)kon_translateWin32Key_(wParam, lParam);
+			kon_event_t ev = {0};
+			ev.type = KON_EVENT_KEY_UP;
+			ev.key = (int)kon_translateWin32Key_(wParam, lParam);
+			kon_pushEvent_(&window->queue, &ev);
 		}
 		break;
 	case WM_LBUTTONDOWN: case WM_LBUTTONUP:
 	case WM_RBUTTONDOWN: case WM_RBUTTONUP:
 	case WM_MBUTTONDOWN: case WM_MBUTTONUP:
 		if (window) {
-			window->hasMouseEvent = true;
-			window->mouseEventType = (msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN)
+			kon_event_t ev = {0};
+			ev.type = (msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN)
 				? KON_EVENT_MOUSE_DOWN : KON_EVENT_MOUSE_UP;
-			window->mouseEventButton = (msg == WM_LBUTTONDOWN || msg == WM_LBUTTONUP) ? KON_MOUSE_LEFT
+			ev.mouseButton = (msg == WM_LBUTTONDOWN || msg == WM_LBUTTONUP) ? KON_MOUSE_LEFT
 				: (msg == WM_RBUTTONDOWN || msg == WM_RBUTTONUP) ? KON_MOUSE_RIGHT
 				: KON_MOUSE_MIDDLE;
-			window->mouseEventX = (int)(short)LOWORD(lParam);
-			window->mouseEventY = (int)(short)HIWORD(lParam);
+			ev.mouseX = (int)(short)LOWORD(lParam);
+			ev.mouseY = (int)(short)HIWORD(lParam);
+			kon_pushEvent_(&window->queue, &ev);
 		}
 		break;
 	case WM_MOUSEMOVE:
 		if (window) {
-			window->hasMouseEvent = true;
-			window->mouseEventType = KON_EVENT_MOUSE_MOVE;
-			window->mouseEventX = (int)(short)LOWORD(lParam);
-			window->mouseEventY = (int)(short)HIWORD(lParam);
+			kon_event_t ev = {0};
+			ev.type = KON_EVENT_MOUSE_MOVE;
+			ev.mouseX = (int)(short)LOWORD(lParam);
+			ev.mouseY = (int)(short)HIWORD(lParam);
+			kon_pushEvent_(&window->queue, &ev);
 		}
 		break;
 	case WM_CLOSE:
-		if (window) window->shouldClose = true;
+		if (window) {
+			kon_event_t ev = {0};
+			ev.type = KON_EVENT_CLOSE;
+			window->shouldClose = true;
+			kon_pushEvent_(&window->queue, &ev);
+		}
 		break;
 	case WM_SIZE:
-		if (window) {
-			window->hasResizeEvent = true;
-			window->resizeWidth  = LOWORD(lParam);
-			window->resizeHeight = HIWORD(lParam);
+		/* minimizing reports 0x0, which would wreck the framebuffer */
+		if (window && wParam != SIZE_MINIMIZED && LOWORD(lParam) > 0 && HIWORD(lParam) > 0) {
+			kon_event_t ev = {0};
+			ev.type = KON_EVENT_RESIZE;
+			ev.width = LOWORD(lParam);
+			ev.height = HIWORD(lParam);
+			kon_pushEvent_(&window->queue, &ev);
 		}
 		break;
 	case WM_DESTROY:
@@ -1106,8 +1143,6 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 	kon_window_t *window = calloc(1, sizeof(kon_window_t));
 	if (!window) return NULL;
 
-	window->shouldClose = false;
-	window->hasResizeEvent = false;
 	window->isTransparent = (flags & KON_WINDOW_TRANSPARENT);
 	window->exitKey = 0;
 
@@ -1214,43 +1249,16 @@ void kon_getWindowSize(kon_window_t *window, int *width, int *height) {
 int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 	if (!window || !event) return 0;
 
-	event->type = KON_EVENT_NONE;
-
 	MSG msg;
-	if (!PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) return 0;
-
-	TranslateMessage(&msg);
-	DispatchMessage(&msg);
-
-	if (window->hasResizeEvent) {
-		event->type = KON_EVENT_RESIZE;
-		event->width  = window->resizeWidth;
-		event->height = window->resizeHeight;
-		window->hasResizeEvent = false;
-		return 1;
+	while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
 	}
 
-	if (window->shouldClose) {
-		event->type = KON_EVENT_CLOSE;
-		return 1;
+	if (!kon_popEvent_(&window->queue, event)) {
+		event->type = KON_EVENT_NONE;
+		return 0;
 	}
-
-	if (window->hasKeyEvent) {
-		event->type = window->keyEventType;
-		event->key  = window->keyEventKey;
-		window->hasKeyEvent = false;
-		return 1;
-	}
-
-	if (window->hasMouseEvent) {
-		event->type = window->mouseEventType;
-		event->mouseX = window->mouseEventX;
-		event->mouseY = window->mouseEventY;
-		event->mouseButton = window->mouseEventButton;
-		window->hasMouseEvent = false;
-		return 1;
-	}
-
 	return 1;
 }
 
