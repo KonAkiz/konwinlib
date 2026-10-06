@@ -1103,7 +1103,7 @@ void kon_deinit(void) {
 kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags) {
 	if (!kon_ctx) return NULL;
 
-	kon_window_t *window = calloc(sizeof(kon_window_t));
+	kon_window_t *window = calloc(1, sizeof(kon_window_t));
 	if (!window) return NULL;
 
 	window->shouldClose = false;
@@ -1145,8 +1145,8 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 		int mon_width = mi.rcMonitor.right - mi.rcMonitor.left;
 		int mon_height = mi.rcMonitor.bottom - mi.rcMonitor.top;
 
-		x = mon_x + (mon_width  - width ) / 2;
-		y = mon_y + (mon_height - height) / 2;
+		x = mon_x + (mon_width  - winW) / 2;
+		y = mon_y + (mon_height - winH) / 2;
 	}
 
 	window->hwnd = CreateWindowEx(exStyle, "KonWinLibClass", title, style, x, y, winW, winH, NULL, NULL, kon_ctx->hInstance, window);
