@@ -57,7 +57,8 @@ typedef enum kon_eventType {
 	KON_EVENT_KEY_UP,
 	KON_EVENT_MOUSE_DOWN,
 	KON_EVENT_MOUSE_UP,
-	KON_EVENT_MOUSE_MOVE
+	KON_EVENT_MOUSE_MOVE,
+	KON_EVENT_TEXT
 } kon_eventType_t;
 
 typedef enum kon_mouseButton {
@@ -101,6 +102,7 @@ typedef struct kon_event {
 	kon_eventType_t type;
 	int width, height; /* will be used to store data for resize events */
 	int key;
+	unsigned int codepoint; /* unicode codepoint, only set for KON_EVENT_TEXT */
 	int mouseX, mouseY;
 	kon_mouseButton_t mouseButton;
 } kon_event_t;
@@ -124,6 +126,9 @@ void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int
 // added these for web dev
 typedef void (*kon_mainLoopFn)(void *userData);
 void kon_runMainLoop(kon_window_t *window, kon_mainLoopFn callback, void *userData);
+
+/* Windows stops your loop while the window is being dragged or resized, this keeps calling callback meanwhile */
+void kon_setLiveCallback(kon_window_t *window, kon_mainLoopFn callback, void *userData);
 
 /*** implementation ***/
 
@@ -175,18 +180,7 @@ struct kon_window {
 	char canvasID[64];
 	bool shouldClose;
 	int exitKey;
-
-	bool hasKeyEvent;
-	kon_eventType_t keyEventType;
-	int keyEventKey;
-
-	bool hasResizeEvent;
-	int resizeWidth, resizeHeight;
-
-	bool hasMouseEvent;
-	kon_eventType_t mouseEventType;
-	int mouseEventX, mouseEventY;
-	kon_mouseButton_t mouseEventButton;
+	kon_eventQueue_t queue;
 };
 
 static kon_key_t kon_translateEmKey_(int keyCode) {
@@ -292,13 +286,16 @@ void kon_deinit(void) {
 static EM_BOOL kon_keyDownCallback_(int eventType, const EmscriptenKeyboardEvent *e, void *userData) {
 	(void)eventType;
 	kon_window_t *window = (kon_window_t *)userData;
+	kon_event_t ev = {0};
 
-	window->hasKeyEvent = true;
-	window->keyEventType = KON_EVENT_KEY_DOWN;
-	window->keyEventKey = kon_translateEmKey_(e->keyCode);
+	ev.type = KON_EVENT_KEY_DOWN;
+	ev.key = (int)kon_translateEmKey_((int)e->keyCode);
+	kon_pushEvent_(&window->queue, &ev);
 
-	if (window->exitKey != 0 && window->keyEventKey == window->exitKey) {
+	if (window->exitKey != 0 && ev.key == window->exitKey) {
 		window->shouldClose = true;
+		ev.type = KON_EVENT_CLOSE;
+		kon_pushEvent_(&window->queue, &ev);
 	}
 
 	return EM_TRUE;
@@ -307,52 +304,44 @@ static EM_BOOL kon_keyDownCallback_(int eventType, const EmscriptenKeyboardEvent
 static EM_BOOL kon_keyUpCallback_(int eventType, const EmscriptenKeyboardEvent *e, void *userData) {
 	(void)eventType;
 	kon_window_t *window = (kon_window_t *)userData;
+	kon_event_t ev = {0};
 
-	window->hasKeyEvent = true;
-	window->keyEventType = KON_EVENT_KEY_UP;
-	window->keyEventKey = kon_translateEmKey_(e->keyCode);
-
-	return EM_TRUE;
-}
-
-static EM_BOOL kon_mouseDownCallback_(int eventType, const EmscriptenMouseEvent *e, void *userData) {
-	(void)eventType;
-	kon_window_t *window = (kon_window_t *)userData;
-
-	if (e->button > KON_MOUSE_RIGHT) return EM_FALSE;
-
-	window->hasMouseEvent = true;
-	window->mouseEventType = KON_EVENT_MOUSE_DOWN;
-	window->mouseEventButton = (kon_windowButton_t)e->button;
-	window->mouseEventX = e->targetX;
-	window->mouseEventY = e->targetY;
+	ev.type = KON_EVENT_KEY_UP;
+	ev.key = (int)kon_translateEmKey_((int)e->keyCode);
+	kon_pushEvent_(&window->queue, &ev);
 
 	return EM_TRUE;
 }
 
-static EM_BOOL kon_mouseUpCallback_(int eventType, const EmscriptenMouseEvent *e, void *userData) {
+static EM_BOOL kon_keyPressCallback_(int eventType, const EmscriptenKeyboardEvent *e, void *userData) {
 	(void)eventType;
 	kon_window_t *window = (kon_window_t *)userData;
+	kon_event_t ev = {0};
 
-	if (e->button > KON_MOUSE_RIGHT) return EM_FALSE:
+	if (e->charCode < 32 || e->charCode == 127) return EM_FALSE;
 
-	window->hasMouseEvent = true;
-	window->mouseEventType = KON_EVENT_MOUSE_UP;
-	window->mouseEventButton = (kon_windowButton_t)e->button;
-	window->mouseEventX = e->targetX;
-	window->mouseEventY = e->targetY;
+	ev.type = KON_EVENT_TEXT;
+	ev.codepoint = (unsigned int)e->charCode;
+	kon_pushEvent_(&window->queue, &ev);
 
 	return EM_TRUE;
 }
 
-static EM_BOOL kon_mouseMoveCallback_(int eventType, const EmscriptenMouseEvent *e, void *userData) {
-	(void)eventType;
+static EM_BOOL kon_mouseCallback_(int eventType, const EmscriptenMouseEvent *e, void *userData) {
 	kon_window_t *window = (kon_window_t *)userData;
+	kon_event_t ev = {0};
 
-	window->hasMouseEvent = true;
-	window->mouseEventType = KON_EVENT_MOUSE_MOVE;
-	window->mouseEventX = e->targetX;
-	window->mouseEventY = e->targetY;
+	if (eventType == EMSCRIPTEN_EVENT_MOUSEMOVE) {
+		ev.type = KON_EVENT_MOUSE_MOVE;
+	} else {
+		if (e->button > KON_MOUSE_RIGHT) return EM_FALSE;
+		ev.type = (eventType == EMSCRIPTEN_EVENT_MOUSEDOWN) ? KON_EVENT_MOUSE_DOWN : KON_EVENT_MOUSE_UP;
+		ev.mouseButton = (kon_mouseButton_t)e->button;
+	}
+
+	ev.mouseX = (int)e->targetX;
+	ev.mouseY = (int)e->targetY;
+	kon_pushEvent_(&window->queue, &ev);
 
 	return EM_TRUE;
 }
@@ -365,17 +354,11 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 		return NULL;
 	}
 
-	kon_window_t *window = malloc(sizeof(kon_window_t));
+	kon_window_t *window = calloc(1, sizeof(kon_window_t));
 	if (!window) return NULL;
 
 	strncpy(window->canvasID, "#canvas", sizeof(window->canvasID) - 1);
 	window->canvasID[sizeof(window->canvasID) - 1] = '\0';
-
-	window->shouldClose = false;
-	window->exitKey = 0;
-	window->hasKeyEvent = false;
-	window->hasResizeEvent = false;
-	window->hasMouseEvent = false;
 
 	emscripten_set_canvas_element_size(window->canvasID, width, height);
 
@@ -385,9 +368,10 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 
 	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, window, EM_FALSE, kon_keyDownCallback_);
 	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, window, EM_FALSE, kon_keyUpCallback_);
-	emscripten_set_mousedown_callback(window->canvasID, window, EM_FALSE, kon_mouseDownCallback_);
-	emscripten_set_mouseup_callback(window->canvasID, window, EM_FALSE, kon_mouseUpCallback_);
-	emscripten_set_mousemove_callback(window->canvasID, window, EM_FALSE, kon_mouseMoveCallback_);
+	emscripten_set_keypress_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, window, EM_FALSE, kon_keyPressCallback_);
+	emscripten_set_mousedown_callback(window->canvasID, window, EM_FALSE, kon_mouseCallback_);
+	emscripten_set_mouseup_callback(window->canvasID, window, EM_FALSE, kon_mouseCallback_);
+	emscripten_set_mousemove_callback(window->canvasID, window, EM_FALSE, kon_mouseCallback_);
 
 	return window;
 }
@@ -397,6 +381,7 @@ void kon_destroyWindow(kon_window_t *window) {
 
 	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, NULL);
 	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, NULL);
+	emscripten_set_keypress_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, NULL);
 	emscripten_set_mousedown_callback(window->canvasID, NULL, EM_FALSE, NULL);
 	emscripten_set_mouseup_callback(window->canvasID, NULL, EM_FALSE, NULL);
 	emscripten_set_mousemove_callback(window->canvasID, NULL, EM_FALSE, NULL);
@@ -441,33 +426,11 @@ void kon_getWindowSize(kon_window_t *window, int *width, int *height) {
 int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 	if (!window || !event) return 0;
 
-	event->type = KON_EVENT_NONE;
-
-	if (window->hasResizeEvent) {
-		event->type = KON_EVENT_RESIZE;
-		event->width = window->resizeWidth;
-		event->height = window->resizeHeight;
-		window->hasResizeEvent = false;
-		return 1;
+	if (!kon_popEvent_(&window->queue, event)) {
+		event->type = KON_EVENT_NONE;
+		return 0;
 	}
-
-	if (window->hasKeyEvent) {
-		event->type = window->keyEventType;
-		event->key  = window->keyEventKey;
-		window->hasKeyEvent = false;
-		return 1;
-	}
-
-	if (window->hasMouseEvent) {
-		event->type = window->mouseEventType;
-		event->mouseX = window->mouseEventX;
-		event->mouseY = window-<mouseEventY;
-		event->mouseButton = window->mouseEventButton;
-		window->hasMouseEvent = false;
-		return 1;
-	}
-
-	return 0;
+	return 1;
 }
 
 EM_JS(void, kon_jsBlit_, (const char *canvasID, uint32_t *pixels, int width, int height), {
@@ -605,7 +568,10 @@ bool kon_init(void) {
 	kon_context_t *ctx = malloc(sizeof(kon_context_t));
 	if (!ctx) return false;
 	ctx->display = XOpenDisplay(NULL);
-	if (!ctx->display) return false;
+	if (!ctx->display) {
+		free(ctx);
+		return false;
+	}
 	kon_ctx = ctx;
 	return true;
 }
@@ -628,6 +594,8 @@ struct kon_window {
 	Atom wm_delete;
 	bool shouldClose;
 	int exitKey;
+	int width, height;
+	kon_eventQueue_t queue;
 };
 
 kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int height, kon_windowFlags_t flags) {
@@ -636,7 +604,7 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 		return NULL;
 	}
 
-	kon_window_t *window = malloc(sizeof(kon_window_t));
+	kon_window_t *window = calloc(1, sizeof(kon_window_t));
 	if (!window) return NULL;
 
 	int screen = DefaultScreen(kon_ctx->display);
@@ -763,8 +731,9 @@ kon_window_t *kon_createWindow(const char *title, int x, int y, int width, int h
 	XFlush(kon_ctx->display);
 
 	window->exitKey = 0;
-
 	window->shouldClose = false;
+	window->width = width;
+	window->height = height;
 
 	return window;
 }
@@ -818,77 +787,109 @@ void kon_getWindowSize(kon_window_t *window, int *width, int *height) {
 	*height = attrs.height;
 }
 
-int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
-	if (!window || !kon_ctx || !event) return 0;
+static void kon_pumpX11_(kon_window_t *window) {
+	while (XPending(kon_ctx->display)) {
+		XEvent xev;
+		kon_event_t ev = {0};
 
-	event->type = KON_EVENT_NONE;
+		XNextEvent(kon_ctx->display, &xev);
 
-	if (!XPending(kon_ctx->display)) return 0;
+		switch (xev.type) {
+		case ClientMessage:
+			if ((Atom)xev.xclient.data.l[0] == window->wm_delete) {
+				ev.type = KON_EVENT_CLOSE;
+				window->shouldClose = true;
+				kon_pushEvent_(&window->queue, &ev);
+			}
+			break;
 
-	XEvent xev;
-	XNextEvent(kon_ctx->display, &xev);
+		case ConfigureNotify:
+			/* moving the window also sends this, only report real size changes */
+			if (xev.xconfigure.width != window->width || xev.xconfigure.height != window->height) {
+				window->width = xev.xconfigure.width;
+				window->height = xev.xconfigure.height;
+				ev.type = KON_EVENT_RESIZE;
+				ev.width = window->width;
+				ev.height = window->height;
+				kon_pushEvent_(&window->queue, &ev);
+			}
+			break;
 
-	if (xev.type == ClientMessage) {
-		if ((Atom)xev.xclient.data.l[0] == window->wm_delete) {
-			event->type = KON_EVENT_CLOSE;
-			window->shouldClose = true;
+		case KeyPress: {
+			char text[8];
+			int len;
+
+			ev.type = KON_EVENT_KEY_DOWN;
+			ev.key = (int)kon_translateX11Key_(XLookupKeysym(&xev.xkey, 0));
+			kon_pushEvent_(&window->queue, &ev);
+
+			if (window->exitKey != 0 && ev.key == window->exitKey) {
+				window->shouldClose = true;
+				ev.type = KON_EVENT_CLOSE;
+				kon_pushEvent_(&window->queue, &ev);
+			}
+
+			len = XLookupString(&xev.xkey, text, (int)sizeof(text), NULL, NULL);
+			if (len == 1 && (unsigned char)text[0] >= 32 && (unsigned char)text[0] != 127 &&
+				!(xev.xkey.state & (ControlMask | Mod1Mask))) {
+				ev.type = KON_EVENT_TEXT;
+				ev.key = 0;
+				ev.codepoint = (unsigned char)text[0];
+				kon_pushEvent_(&window->queue, &ev);
+			}
+			break;
 		}
-	}
 
-	if (xev.type == ConfigureNotify) {
-		event->type = KON_EVENT_RESIZE;
-		event->width = xev.xconfigure.width;
-		event->height = xev.xconfigure.height;
-		return 1;
-	}
-
-	if (xev.type == KeyPress) {
-		event->type = KON_EVENT_KEY_DOWN;
-		event->key = (int)kon_translateX11Key_(XLookupKeysym(&xev.xkey, 0));
-		if (window->exitKey != 0 && event->key == window->exitKey) {
-			window->shouldClose = true;
-		}
-		return 1;
-	}
-
-	if (xev.type == KeyRelease) {
-		event->type = KON_EVENT_KEY_UP;
-		event->key = (int)kon_translateX11Key_(XLookupKeysym(&xev.xkey, 0));
-		return 1;
-	}
-
-	if (xev.type == ButtonPress || xev.type == ButtonRelease) {
-		int konButton = -1;
-		switch (xev.xbutton.button) {
-		case Button1:
-			konButton = KON_MOUSE_LEFT;
+		case KeyRelease:
+			/* X reports key repeat as a release followed by a press with the same time, drop the release */
+			if (XPending(kon_ctx->display)) {
+				XEvent next;
+				XPeekEvent(kon_ctx->display, &next);
+				if (next.type == KeyPress && next.xkey.time == xev.xkey.time && next.xkey.keycode == xev.xkey.keycode) {
+					break;
+				}
+			}
+			ev.type = KON_EVENT_KEY_UP;
+			ev.key = (int)kon_translateX11Key_(XLookupKeysym(&xev.xkey, 0));
+			kon_pushEvent_(&window->queue, &ev);
 			break;
-		case Button2:
-			konButton = KON_MOUSE_MIDDLE;
+
+		case ButtonPress:
+		case ButtonRelease:
+			switch (xev.xbutton.button) {
+			case Button1: ev.mouseButton = KON_MOUSE_LEFT; break;
+			case Button2: ev.mouseButton = KON_MOUSE_MIDDLE; break;
+			case Button3: ev.mouseButton = KON_MOUSE_RIGHT; break;
+			default: continue;
+			}
+			ev.type = (xev.type == ButtonPress) ? KON_EVENT_MOUSE_DOWN : KON_EVENT_MOUSE_UP;
+			ev.mouseX = xev.xbutton.x;
+			ev.mouseY = xev.xbutton.y;
+			kon_pushEvent_(&window->queue, &ev);
 			break;
-		case Button3:
-			konButton = KON_MOUSE_RIGHT;
+
+		case MotionNotify:
+			ev.type = KON_EVENT_MOUSE_MOVE;
+			ev.mouseX = xev.xmotion.x;
+			ev.mouseY = xev.xmotion.y;
+			kon_pushEvent_(&window->queue, &ev);
 			break;
+
 		default:
 			break;
 		}
-
-		if (konButton != -1) {
-			event->type = (xev.type == ButtonPress) ? KON_EVENT_MOUSE_DOWN : KON_EVENT_MOUSE_UP;
-			event->mouseButton = (kon_mouseButton_t)konButton;
-			event->mouseX = xev.xbutton.x;
-			event->mouseY = xev.xbutton.y;
-		}
-		return 1;
 	}
+}
 
-	if (xev.type == MotionNotify) {
-		event->type = KON_EVENT_MOUSE_MOVE;
-		event->mouseX = xev.xmotion.x;
-		event->mouseY = xev.xmotion.y;
-		return 1;
+int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
+	if (!window || !kon_ctx || !event) return 0;
+
+	kon_pumpX11_(window);
+
+	if (!kon_popEvent_(&window->queue, event)) {
+		event->type = KON_EVENT_NONE;
+		return 0;
 	}
-
 	return 1;
 }
 
@@ -929,6 +930,10 @@ struct kon_window {
 	bool shouldClose;
 	bool isTransparent;
 	int exitKey;
+	unsigned short highSurrogate;
+	kon_mainLoopFn liveFn;
+	void *liveData;
+	bool inLive;
 	kon_eventQueue_t queue;
 };
 
@@ -1055,6 +1060,26 @@ LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 			kon_pushEvent_(&window->queue, &ev);
 		}
 		break;
+	case WM_CHAR:
+		if (window) {
+			unsigned int c = (unsigned int)wParam;
+			kon_event_t ev = {0};
+
+			if (c >= 0xD800 && c <= 0xDBFF) {
+				window->highSurrogate = (unsigned short)c;
+				break;
+			}
+			if (c >= 0xDC00 && c <= 0xDFFF) {
+				c = 0x10000 + (((unsigned int)window->highSurrogate - 0xD800) << 10) + (c - 0xDC00);
+				window->highSurrogate = 0;
+			}
+			if (c < 32 || c == 127) break;
+
+			ev.type = KON_EVENT_TEXT;
+			ev.codepoint = c;
+			kon_pushEvent_(&window->queue, &ev);
+		}
+		break;
 	case WM_LBUTTONDOWN: case WM_LBUTTONUP:
 	case WM_RBUTTONDOWN: case WM_RBUTTONUP:
 	case WM_MBUTTONDOWN: case WM_MBUTTONUP:
@@ -1097,6 +1122,19 @@ LRESULT CALLBACK kon_wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 			kon_pushEvent_(&window->queue, &ev);
 		}
 		break;
+	case WM_ENTERSIZEMOVE:
+		if (window && window->liveFn) SetTimer(hwnd, 1, 8, NULL);
+		break;
+	case WM_EXITSIZEMOVE:
+		KillTimer(hwnd, 1);
+		break;
+	case WM_TIMER:
+		if (window && wParam == 1 && window->liveFn && !window->inLive) {
+			window->inLive = true;
+			window->liveFn(window->liveData);
+			window->inLive = false;
+		}
+		return 0;
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
@@ -1249,10 +1287,12 @@ void kon_getWindowSize(kon_window_t *window, int *width, int *height) {
 int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 	if (!window || !event) return 0;
 
-	MSG msg;
-	while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+	if (!window->inLive) {
+		MSG msg;
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 	}
 
 	if (!kon_popEvent_(&window->queue, event)) {
@@ -1260,6 +1300,12 @@ int kon_pollEvent(kon_window_t *window, kon_event_t *event) {
 		return 0;
 	}
 	return 1;
+}
+
+void kon_setLiveCallback(kon_window_t *window, kon_mainLoopFn callback, void *userData) {
+	if (!window) return;
+	window->liveFn = callback;
+	window->liveData = userData;
 }
 
 void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int height) {
@@ -1309,6 +1355,14 @@ void kon_blitPixels(kon_window_t *window, const uint32_t *pixels, int width, int
 	#error "konwinlib.h: unsupported platform"
 #endif /* end of platform switch */
 
+#ifndef _WIN32
+
+void kon_setLiveCallback(kon_window_t *window, kon_mainLoopFn callback, void *userData) {
+	(void)window; (void)callback; (void)userData;
+}
+
+#endif
+
 /*** main loop ***/
 
 #ifdef __EMSCRIPTEN__
@@ -1345,6 +1399,8 @@ void kon_runMainLoop(kon_window_t *window, kon_mainLoopFn callback, void *userDa
 #else
 
 void kon_runMainLoop(kon_window_t *window, kon_mainLoopFn callback, void *userData) {
+	kon_setLiveCallback(window, callback, userData);
+
 	while (!kon_windowShouldClose(window)) {
 		callback(userData);
 	}
